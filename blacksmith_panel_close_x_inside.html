@@ -1,0 +1,123 @@
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 20px;">
+<h2 class="sr-only">대장간 시설 관리 패널 시뮬레이터 — 열기로 패널이 아래에서 슬라이드, 패널 안 X 버튼으로 닫기, 모든 레벨 초기화·골드 10만 추가 버튼 포함</h2>
+
+<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px;">
+  <button id="btnOpen" style="font-size:13px;padding:8px 14px;display:flex;align-items:center;gap:5px;"><i class="ti ti-arrow-bar-to-up" style="font-size:15px;" aria-hidden="true"></i>열기</button>
+  <button id="btnReset" style="font-size:13px;padding:8px 14px;display:flex;align-items:center;gap:5px;"><i class="ti ti-refresh" style="font-size:15px;" aria-hidden="true"></i>모든 레벨 초기화</button>
+  <button id="btnGold" style="font-size:13px;padding:8px 14px;display:flex;align-items:center;gap:5px;"><i class="ti ti-coin" style="font-size:15px;" aria-hidden="true"></i>돈 +10만</button>
+</div>
+
+<div style="display:flex;justify-content:center;">
+<div style="position:relative;width:340px;height:560px;background:var(--color-background-tertiary);border:0.5px solid var(--color-border-secondary);border-radius:22px;overflow:hidden;">
+
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--color-text-tertiary);">
+    <div style="width:64px;height:64px;border-radius:var(--border-radius-lg);background:#FAEEDA;display:flex;align-items:center;justify-content:center;color:#854F0B;"><i class="ti ti-building-factory-2" style="font-size:36px;" aria-hidden="true"></i></div>
+    <div style="font-size:14px;font-weight:500;color:var(--color-text-secondary);">대장간</div>
+    <div style="font-size:12px;">접근 시 패널이 아래에서 올라옵니다</div>
+  </div>
+
+  <div id="scrim" style="position:absolute;inset:0;background:rgba(0,0,0,0.35);opacity:0;pointer-events:none;transition:opacity .35s;"></div>
+
+  <div id="sheet" style="position:absolute;left:0;right:0;bottom:0;background:var(--color-background-primary);border-top-left-radius:18px;border-top-right-radius:18px;border-top:0.5px solid var(--color-border-secondary);transform:translateY(105%);transition:transform .38s cubic-bezier(.22,.61,.36,1);">
+
+    <div style="display:flex;justify-content:center;padding:8px 0 2px;"><div style="width:40px;height:4px;border-radius:99px;background:var(--color-border-secondary);"></div></div>
+
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px 12px;border-bottom:0.5px solid var(--color-border-tertiary);">
+      <div style="width:32px;height:32px;border-radius:var(--border-radius-md);background:#FAEEDA;display:flex;align-items:center;justify-content:center;color:#854F0B;"><i class="ti ti-building-factory-2" style="font-size:18px;" aria-hidden="true"></i></div>
+      <div style="flex:1;"><div style="font-size:15px;font-weight:500;">대장간</div></div>
+      <div style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:#854F0B;background:#FAEEDA;padding:4px 10px;border-radius:var(--border-radius-md);"><i class="ti ti-coin" style="font-size:14px;" aria-hidden="true"></i><span id="gold">2,400</span></div>
+      <button id="btnCloseX" aria-label="패널 닫기" style="width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:var(--border-radius-md);"><i class="ti ti-x" style="font-size:17px;" aria-hidden="true"></i></button>
+    </div>
+
+    <div style="display:flex;padding:10px 14px 0;gap:8px;">
+      <button id="tabStandBtn" style="flex:1;font-size:13px;font-weight:500;padding:9px 0;border:none;border-bottom:2px solid var(--color-border-info);color:var(--color-text-info);background:none;border-radius:0;display:flex;align-items:center;justify-content:center;gap:5px;"><i class="ti ti-layout-grid" style="font-size:15px;" aria-hidden="true"></i>진열대</button>
+      <button id="tabEquipBtn" style="flex:1;font-size:13px;padding:9px 0;border:none;border-bottom:2px solid var(--color-border-tertiary);color:var(--color-text-tertiary);background:none;border-radius:0;display:flex;align-items:center;justify-content:center;gap:5px;"><i class="ti ti-sword" style="font-size:15px;" aria-hidden="true"></i>장비</button>
+    </div>
+
+    <div style="padding:12px 14px 16px;">
+      <div id="tabStand" style="display:flex;flex-direction:column;gap:6px;"></div>
+      <div id="tabEquip" style="display:none;flex-direction:column;gap:6px;"></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary);font-size:11px;color:var(--color-text-tertiary);display:flex;align-items:center;gap:5px;">
+        <i class="ti ti-bolt" style="font-size:14px;" aria-hidden="true"></i> 진열대 해금은 비컨 · 시설 레벨 없음 · 항목 최대 50레벨
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+<script>
+(function(){
+  var icon={ "검":"ti-sword", "도끼":"ti-axe", "망치":"ti-hammer" };
+  var MAX=50;
+  var gold=2400;
+  var stands=[
+    {w:"검",n:1,unlocked:true,lv:8,cost:120},
+    {w:"검",n:2,unlocked:false,lv:0,cost:120},
+    {w:"도끼",n:1,unlocked:true,lv:4,cost:120},
+    {w:"도끼",n:2,unlocked:false,lv:0,cost:120},
+    {w:"망치",n:1,unlocked:true,lv:2,cost:120},
+    {w:"망치",n:2,unlocked:false,lv:0,cost:120}
+  ];
+  var equip=[
+    {w:"검",s:"판매 가격",lv:6,cost:100},
+    {w:"검",s:"훈련장 비용",lv:4,cost:80},
+    {w:"도끼",s:"판매 가격",lv:3,cost:100},
+    {w:"도끼",s:"훈련장 비용",lv:2,cost:80},
+    {w:"망치",s:"판매 가격",lv:1,cost:100},
+    {w:"망치",s:"훈련장 비용",lv:1,cost:80}
+  ];
+  var goldEl=document.getElementById("gold");
+  var tabStand=document.getElementById("tabStand"),tabEquip=document.getElementById("tabEquip");
+  var tabStandBtn=document.getElementById("tabStandBtn"),tabEquipBtn=document.getElementById("tabEquipBtn");
+  var sheet=document.getElementById("sheet"),scrim=document.getElementById("scrim");
+
+  function refreshGold(){ goldEl.textContent=gold.toLocaleString(); }
+  function rowBase(){var d=document.createElement("div");d.style.cssText="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);";return d;}
+
+  function renderStands(){
+    tabStand.innerHTML="";
+    stands.forEach(function(s,i){
+      var r=rowBase(),right,sub;
+      if(!s.unlocked){ right='<span style="font-size:12px;font-weight:500;color:var(--color-text-tertiary);background:var(--color-background-tertiary);padding:5px 10px;border-radius:var(--border-radius-md);display:flex;align-items:center;gap:4px;"><i class="ti ti-lock" style="font-size:13px;" aria-hidden="true"></i>잠금</span>'; sub='비컨에서 해금'; }
+      else if(s.lv>=MAX){ right='<span style="font-size:12px;font-weight:500;color:#854F0B;background:#FAEEDA;padding:5px 10px;border-radius:var(--border-radius-md);">MAX</span>'; sub='Lv.'+MAX+' / '+MAX+' · 거치 수량↑'; }
+      else { right='<button data-stup="'+i+'" style="font-size:12px;padding:6px 10px;display:flex;align-items:center;gap:4px;"><i class="ti ti-arrow-up" style="font-size:14px;" aria-hidden="true"></i>'+s.cost+'G</button>'; sub='Lv.'+s.lv+' / '+MAX+' · 거치 수량↑'; }
+      r.innerHTML='<i class="ti '+icon[s.w]+'" style="font-size:18px;color:var(--color-text-secondary);'+(s.unlocked?'':'opacity:.5;')+'" aria-hidden="true"></i><div style="flex:1;'+(s.unlocked?'':'opacity:.6;')+'"><div style="font-size:13px;">'+s.w+' 진열대 '+s.n+'</div><div style="font-size:11px;color:var(--color-text-tertiary);">'+sub+'</div></div>'+right;
+      tabStand.appendChild(r);
+    });
+    tabStand.querySelectorAll("button[data-stup]").forEach(function(b){ b.addEventListener("click",function(){ var s=stands[+b.dataset.stup]; if(s.lv>=MAX||gold<s.cost)return; s.lv++; gold-=s.cost; renderStands(); refreshGold(); }); });
+  }
+  function renderEquip(){
+    tabEquip.innerHTML="";
+    equip.forEach(function(e,i){
+      var maxed=e.lv>=MAX,r=rowBase();
+      r.innerHTML='<i class="ti '+icon[e.w]+'" style="font-size:18px;color:var(--color-text-secondary);" aria-hidden="true"></i><div style="flex:1;"><div style="font-size:13px;">'+e.w+' '+e.s+'</div><div style="font-size:11px;color:var(--color-text-tertiary);">Lv.'+e.lv+' / '+MAX+'</div></div>'+
+        (maxed?'<span style="font-size:12px;font-weight:500;color:#854F0B;background:#FAEEDA;padding:5px 10px;border-radius:var(--border-radius-md);">MAX</span>':'<button data-eq="'+i+'" style="font-size:12px;padding:6px 10px;display:flex;align-items:center;gap:4px;"><i class="ti ti-arrow-up" style="font-size:14px;" aria-hidden="true"></i>'+e.cost+'G</button>');
+      tabEquip.appendChild(r);
+    });
+    tabEquip.querySelectorAll("button[data-eq]").forEach(function(b){ b.addEventListener("click",function(){ var e=equip[+b.dataset.eq]; if(e.lv>=MAX||gold<e.cost)return; e.lv++; gold-=e.cost; renderEquip(); refreshGold(); }); });
+  }
+  function showTab(t){
+    var stand=t==="stand";
+    tabStand.style.display=stand?"flex":"none"; tabEquip.style.display=stand?"none":"flex";
+    tabStandBtn.style.color=stand?"var(--color-text-info)":"var(--color-text-tertiary)"; tabStandBtn.style.fontWeight=stand?"500":"400"; tabStandBtn.style.borderBottomColor=stand?"var(--color-border-info)":"var(--color-border-tertiary)";
+    tabEquipBtn.style.color=stand?"var(--color-text-tertiary)":"var(--color-text-info)"; tabEquipBtn.style.fontWeight=stand?"400":"500"; tabEquipBtn.style.borderBottomColor=stand?"var(--color-border-tertiary)":"var(--color-border-info)";
+  }
+  tabStandBtn.addEventListener("click",function(){showTab("stand");});
+  tabEquipBtn.addEventListener("click",function(){showTab("equip");});
+
+  function open(){ sheet.style.transform="translateY(0)"; scrim.style.opacity="1"; scrim.style.pointerEvents="auto"; }
+  function close(){ sheet.style.transform="translateY(105%)"; scrim.style.opacity="0"; scrim.style.pointerEvents="none"; }
+  document.getElementById("btnOpen").addEventListener("click",open);
+  document.getElementById("btnCloseX").addEventListener("click",close);
+  scrim.addEventListener("click",close);
+  document.getElementById("btnGold").addEventListener("click",function(){ gold+=100000; refreshGold(); });
+  document.getElementById("btnReset").addEventListener("click",function(){
+    stands.forEach(function(s){ s.lv=0; });
+    equip.forEach(function(e){ e.lv=0; });
+    renderStands(); renderEquip();
+  });
+
+  renderStands(); renderEquip(); refreshGold(); showTab("stand");
+})();
+</script>

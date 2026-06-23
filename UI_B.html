@@ -1,0 +1,97 @@
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">B안 인터랙티브 프로토타입 v3: 빈 게임화면에서 업그레이드를 누르면 조금 더 큰 바텀시트 메뉴가 열린다.</h2>
+
+<style>
+#bp3 .navi{flex:1;text-align:center;padding:10px 0 9px;cursor:pointer;background:transparent;border:none;border-top:2px solid transparent;transition:background .12s}
+#bp3 .navi:hover{background:var(--color-background-secondary)}
+#bp3 .navi.on{background:var(--color-background-info);border-top-color:var(--color-border-info)}
+#bp3 .navi .lab{font-size:10px;margin-top:2px;color:var(--color-text-tertiary)}
+#bp3 .navi.on .lab,#bp3 .navi.on i{color:var(--color-text-info)}
+#bp3 .tab{flex:1;text-align:center;padding:10px 0;font-size:13px;color:var(--color-text-secondary);cursor:pointer;border:none;background:transparent;border-bottom:2px solid transparent}
+#bp3 .tab:hover{color:var(--color-text-primary)}
+#bp3 .tab.on{color:var(--color-text-info);font-weight:500;border-bottom-color:var(--color-border-info)}
+</style>
+
+<div id="bp3" style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1rem;">
+  <div style="position:relative;width:340px;max-width:100%;margin:0 auto;height:548px;background:var(--color-background-tertiary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);overflow:hidden;">
+
+    <div style="position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:6px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:999px;padding:5px 12px;font-size:12px;color:var(--color-text-secondary);z-index:4;"><i class="ti ti-coins" style="font-size:14px;" aria-hidden="true"></i>12,480</div>
+
+    <div style="position:absolute;left:0;right:0;top:0;bottom:58px;display:flex;align-items:center;justify-content:center;">
+      <div style="text-align:center;font-size:12px;color:var(--color-text-tertiary);">게임화면 · 아래 업그레이드를 누르세요</div>
+    </div>
+
+    <div id="backdrop3" onclick="b3Close()" style="position:absolute;left:0;right:0;top:0;bottom:58px;background:rgba(0,0,0,0.4);display:none;z-index:2;"></div>
+
+    <div id="sheet3" style="position:absolute;left:0;right:0;bottom:58px;top:168px;background:var(--color-background-primary);border-top-left-radius:var(--border-radius-xl);border-top-right-radius:var(--border-radius-xl);border:0.5px solid var(--color-border-secondary);display:none;flex-direction:column;z-index:3;overflow:hidden;">
+      <div style="display:flex;justify-content:center;padding-top:8px;"><div style="width:36px;height:4px;border-radius:999px;background:var(--color-border-secondary);"></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px 10px;border-bottom:0.5px solid var(--color-border-tertiary);">
+        <div style="display:flex;align-items:center;gap:8px;"><i class="ti ti-arrow-up-circle" style="font-size:18px;color:var(--color-text-secondary);" aria-hidden="true"></i><span style="font-size:15px;font-weight:500;">업그레이드</span></div>
+        <button onclick="b3Close()" aria-label="닫기" style="display:flex;align-items:center;gap:4px;border:0.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;padding:5px 10px;border-radius:var(--border-radius-md);font-size:12px;color:var(--color-text-secondary);"><i class="ti ti-x" style="font-size:15px;" aria-hidden="true"></i>닫기</button>
+      </div>
+      <div style="display:flex;gap:4px;padding:6px 12px 0;border-bottom:0.5px solid var(--color-border-tertiary);">
+        <button class="tab on" data-k="player" onclick="b3Tab('player')">플레이어</button>
+        <button class="tab" data-k="worker" onclick="b3Tab('worker')">일꾼</button>
+        <button class="tab" data-k="equip" onclick="b3Tab('equip')">장비</button>
+      </div>
+      <div id="mc3" style="padding:12px;display:flex;flex-direction:column;gap:9px;"></div>
+    </div>
+
+    <div style="position:absolute;left:0;right:0;bottom:0;display:flex;background:var(--color-background-primary);border-top:0.5px solid var(--color-border-tertiary);z-index:4;">
+      <button class="navi" onclick="b3Temp()"><i class="ti ti-square-dashed" style="font-size:21px;color:var(--color-text-tertiary);" aria-hidden="true"></i><div class="lab">임시1</div></button>
+      <button class="navi" onclick="b3Temp()"><i class="ti ti-square-dashed" style="font-size:21px;color:var(--color-text-tertiary);" aria-hidden="true"></i><div class="lab">임시2</div></button>
+      <button class="navi" id="navup3" onclick="b3Open()"><i class="ti ti-arrow-up-circle" style="font-size:21px;color:var(--color-text-secondary);" aria-hidden="true"></i><div class="lab" style="color:var(--color-text-secondary)">업그레이드</div></button>
+      <button class="navi" onclick="b3Temp()"><i class="ti ti-square-dashed" style="font-size:21px;color:var(--color-text-tertiary);" aria-hidden="true"></i><div class="lab">임시3</div></button>
+      <button class="navi" onclick="b3Temp()"><i class="ti ti-square-dashed" style="font-size:21px;color:var(--color-text-tertiary);" aria-hidden="true"></i><div class="lab">임시4</div></button>
+    </div>
+
+    <div id="toast3" style="position:absolute;left:50%;bottom:70px;transform:translateX(-50%);background:var(--color-text-primary);color:var(--color-background-primary);font-size:12px;padding:7px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;z-index:5;">준비 중인 슬롯입니다</div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var DATA={
+    player:{icon:'ti-user-up',items:[{n:'이동 속도',d:'+5%',lv:'Lv.4',c:'600'},{n:'채굴력',d:'+1',lv:'Lv.2',c:'900'},{n:'인벤토리',d:'+10칸',lv:'Lv.1',c:'1,500'}]},
+    worker:{icon:'ti-users',items:[{n:'일꾼 수',d:'+1명',lv:'Lv.3',c:'2,000'},{n:'작업 속도',d:'+8%',lv:'Lv.5',c:'750'},{n:'자동 운반',d:'해금',lv:'Lv.0',c:'3,200'}]},
+    equip:{icon:'ti-anvil',items:[{n:'대장간 망치',d:'제작 속도 +8%',lv:'Lv.3',c:'850'},{n:'용광로',d:'정제 수율 +1',lv:'Lv.2',c:'1,200'},{n:'정제소',d:'정제 속도 +6%',lv:'Lv.2',c:'1,000'}]}
+  };
+  var cur='player';
+  function render(){
+    var d=DATA[cur],html='';
+    d.items.forEach(function(it,i){
+      var fill=i===0?'var(--color-background-info)':'var(--color-background-secondary)';
+      var icol=i===0?'var(--color-text-info)':'var(--color-text-secondary)';
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:11px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);">'+
+        '<div style="width:40px;height:40px;border-radius:var(--border-radius-md);background:'+fill+';display:flex;align-items:center;justify-content:center;color:'+icol+';"><i class="ti '+d.icon+'" style="font-size:21px;"></i></div>'+
+        '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:500;">'+it.n+' <span style="font-size:12px;color:var(--color-text-secondary);font-weight:400;">'+it.lv+'</span></div><div style="font-size:12px;color:var(--color-text-secondary);">'+it.d+'</div></div>'+
+        '<button style="display:flex;align-items:center;gap:5px;background:var(--color-background-secondary);border:none;border-radius:var(--border-radius-md);padding:9px 13px;font-size:13px;font-weight:500;cursor:pointer;color:var(--color-text-primary);"><i class="ti ti-coins" style="font-size:14px;color:var(--color-text-secondary);"></i>'+it.c+'</button>'+
+      '</div>';
+    });
+    document.getElementById('mc3').innerHTML=html;
+  }
+  window.b3Open=function(){
+    document.getElementById('backdrop3').style.display='block';
+    document.getElementById('sheet3').style.display='flex';
+    document.getElementById('navup3').classList.add('on');
+    render();
+  };
+  window.b3Close=function(){
+    document.getElementById('backdrop3').style.display='none';
+    document.getElementById('sheet3').style.display='none';
+    document.getElementById('navup3').classList.remove('on');
+  };
+  window.b3Tab=function(k){
+    cur=k;
+    document.querySelectorAll('#bp3 .tab').forEach(function(t){t.classList.toggle('on',t.dataset.k===k);});
+    render();
+  };
+  var tt;
+  window.b3Temp=function(){
+    var el=document.getElementById('toast3');
+    el.style.opacity='1';clearTimeout(tt);
+    tt=setTimeout(function(){el.style.opacity='0';},1300);
+  };
+  render();
+})();
+</script>

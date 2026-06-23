@@ -1,3 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>업그레이드 UI · A안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
+<style>
+:root{
+  color-scheme: light;
+  --color-background-primary:#ffffff;
+  --color-background-secondary:#f0efe8;
+  --color-background-tertiary:#f7f6f1;
+  --color-background-info:#e6f1fb;
+  --color-text-primary:#1f1e1c;
+  --color-text-secondary:#73726c;
+  --color-text-tertiary:#9c9a92;
+  --color-text-info:#185fa5;
+  --color-border-tertiary:rgba(0,0,0,0.12);
+  --color-border-secondary:rgba(0,0,0,0.22);
+  --color-border-primary:rgba(0,0,0,0.32);
+  --color-border-info:#378add;
+  --border-radius-md:8px;
+  --border-radius-lg:12px;
+  --border-radius-xl:16px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme: dark;
+    --color-background-primary:#1f1e1c;
+    --color-background-secondary:#2a2926;
+    --color-background-tertiary:#161513;
+    --color-background-info:#0c447c;
+    --color-text-primary:#ecebe4;
+    --color-text-secondary:#a8a69d;
+    --color-text-tertiary:#7c7a72;
+    --color-text-info:#85b7eb;
+    --color-border-tertiary:rgba(255,255,255,0.14);
+    --color-border-secondary:rgba(255,255,255,0.26);
+    --color-border-primary:rgba(255,255,255,0.36);
+    --color-border-info:#378add;
+  }
+}
+*{box-sizing:border-box;}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--color-background-tertiary);color:var(--color-text-primary);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo",sans-serif;}
+.ti{font-size:inherit;line-height:1;}
+</style>
+</head>
+<body>
+
 <h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">A안 인터랙티브 프로토타입: 하단의 장비·일꾼·플레이어 아이콘을 누르면 탭 없이 해당 업그레이드 시트가 바로 열린다.</h2>
 
 <style>
@@ -90,3 +140,5 @@
   };
 })();
 </script>
+</body>
+</html>

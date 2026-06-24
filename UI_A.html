@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>업그레이드 UI · A안</title>
+<title>업그레이드 UI · A (센터 팝업)</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
 <style>
 :root{
@@ -18,7 +18,6 @@
   --color-text-info:#185fa5;
   --color-border-tertiary:rgba(0,0,0,0.12);
   --color-border-secondary:rgba(0,0,0,0.22);
-  --color-border-primary:rgba(0,0,0,0.32);
   --color-border-info:#378add;
   --border-radius-md:8px;
   --border-radius-lg:12px;
@@ -37,56 +36,66 @@
     --color-text-info:#85b7eb;
     --color-border-tertiary:rgba(255,255,255,0.14);
     --color-border-secondary:rgba(255,255,255,0.26);
-    --color-border-primary:rgba(255,255,255,0.36);
     --color-border-info:#378add;
   }
 }
 *{box-sizing:border-box;}
 body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--color-background-tertiary);color:var(--color-text-primary);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo",sans-serif;}
 .ti{font-size:inherit;line-height:1;}
+
+#ap2 .navi{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:10px 0;cursor:pointer;background:transparent;border:none;transition:background .12s}
+#ap2 .navi:hover{background:var(--color-background-secondary)}
+#ap2 .navi i{font-size:24px;color:var(--color-text-secondary);transition:transform .18s,color .18s}
+#ap2 .navi .lab{font-size:11px;margin-top:4px;color:var(--color-text-tertiary);transition:color .18s}
+#ap2 .navi.tmp i{color:var(--color-text-tertiary)}
+#ap2 .navi.on i{color:var(--color-text-info);transform:scale(1.35)}
+#ap2 .navi.on .lab{color:var(--color-text-info);font-weight:500}
+@media (prefers-reduced-motion: no-preference){
+  #ap2 .navi.on i{animation:ap2iconpop .4s ease-out}
+}
+@keyframes ap2iconpop{0%{transform:scale(1)}55%{transform:scale(1.55)}100%{transform:scale(1.35)}}
+#ap2 .pop{animation:ap2pop .16s ease-out}
+@keyframes ap2pop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+#ap2 .xbtn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:#e24b4a;color:#fff;border:none;border-radius:var(--border-radius-md);cursor:pointer}
+#ap2 .xbtn:hover{background:#c93f3e}
+#ap2 .cost{display:flex;align-items:center;gap:6px;background:var(--color-background-secondary);border:none;border-radius:var(--border-radius-md);padding:11px 15px;font-size:14px;font-weight:500;cursor:pointer;color:var(--color-text-primary);align-self:center;}
+#ap2 .cost:hover{background:var(--color-background-info);color:var(--color-text-info);}
+#ap2 #apc{scrollbar-width:none;-ms-overflow-style:none;}
+#ap2 #apc::-webkit-scrollbar{width:0;height:0;display:none;}
 </style>
 </head>
 <body>
 
-<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">A안 인터랙티브 프로토타입: 하단의 장비·일꾼·플레이어 아이콘을 누르면 탭 없이 해당 업그레이드 시트가 바로 열린다.</h2>
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">하단 아이콘을 누르면 화면 중앙에 업그레이드 캔버스가 팝업된다. 각 능력치 행은 이름, 현재 레벨, 현재값 → 다음값 구조로 표시된다.</h2>
 
-<style>
-#ap1 .navi{flex:1;text-align:center;padding:10px 0 9px;cursor:pointer;background:transparent;border:none;border-top:2px solid transparent;transition:background .12s}
-#ap1 .navi:hover{background:var(--color-background-secondary)}
-#ap1 .navi.on{background:var(--color-background-info);border-top-color:var(--color-border-info)}
-#ap1 .navi .lab{font-size:10px;margin-top:2px;color:var(--color-text-tertiary)}
-#ap1 .navi.on .lab,#ap1 .navi.on i{color:var(--color-text-info)}
-</style>
+<div id="ap2" style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1rem;">
+  <div style="position:relative;width:400px;max-width:100%;margin:0 auto;height:680px;background:var(--color-background-tertiary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);overflow:hidden;">
 
-<div id="ap1" style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1rem;">
-  <div style="position:relative;width:340px;max-width:100%;margin:0 auto;height:548px;background:var(--color-background-tertiary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);overflow:hidden;">
+    <div style="position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:6px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:999px;padding:6px 13px;font-size:13px;color:var(--color-text-secondary);z-index:1;"><i class="ti ti-coins" style="font-size:15px;" aria-hidden="true"></i>12,480</div>
 
-    <div style="position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:6px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:999px;padding:5px 12px;font-size:12px;color:var(--color-text-secondary);z-index:4;"><i class="ti ti-coins" style="font-size:14px;" aria-hidden="true"></i>12,480</div>
-
-    <div style="position:absolute;left:0;right:0;top:0;bottom:58px;display:flex;align-items:center;justify-content:center;">
-      <div style="text-align:center;font-size:12px;color:var(--color-text-tertiary);">게임화면 · 아래 아이콘을 누르세요</div>
+    <div style="position:absolute;left:0;right:0;top:0;bottom:66px;display:flex;align-items:center;justify-content:center;">
+      <div style="text-align:center;font-size:13px;color:var(--color-text-tertiary);">게임화면 · 아래 아이콘을 누르세요</div>
     </div>
 
-    <div id="abackdrop" onclick="aClose()" style="position:absolute;left:0;right:0;top:0;bottom:58px;background:rgba(0,0,0,0.4);display:none;z-index:2;"></div>
+    <div id="abd" style="position:absolute;left:0;right:0;top:0;bottom:66px;background:rgba(0,0,0,0.45);display:none;z-index:2;"></div>
 
-    <div id="asheet" style="position:absolute;left:0;right:0;bottom:58px;top:168px;background:var(--color-background-primary);border-top-left-radius:var(--border-radius-xl);border-top-right-radius:var(--border-radius-xl);border:0.5px solid var(--color-border-secondary);display:none;flex-direction:column;z-index:3;overflow:hidden;">
-      <div style="display:flex;justify-content:center;padding-top:8px;"><div style="width:36px;height:4px;border-radius:999px;background:var(--color-border-secondary);"></div></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px 10px;border-bottom:0.5px solid var(--color-border-tertiary);">
-        <div style="display:flex;align-items:center;gap:8px;"><i id="ahicon" class="ti ti-anvil" style="font-size:18px;color:var(--color-text-info);" aria-hidden="true"></i><span id="ahname" style="font-size:15px;font-weight:500;">장비 업그레이드</span></div>
-        <button onclick="aClose()" aria-label="닫기" style="display:flex;align-items:center;gap:4px;border:0.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;padding:5px 10px;border-radius:var(--border-radius-md);font-size:12px;color:var(--color-text-secondary);"><i class="ti ti-x" style="font-size:15px;" aria-hidden="true"></i>닫기</button>
+    <div id="apop" class="pop" style="position:absolute;top:84px;bottom:90px;left:22px;right:22px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);display:none;flex-direction:column;z-index:3;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 14px 14px 16px;border-bottom:0.5px solid var(--color-border-tertiary);">
+        <div style="display:flex;align-items:center;gap:9px;"><i id="api" class="ti ti-users" style="font-size:20px;color:var(--color-text-info);" aria-hidden="true"></i><span id="apt" style="font-size:16px;font-weight:500;">일꾼 업그레이드</span></div>
+        <button id="axbtn" class="xbtn" aria-label="닫기"><i class="ti ti-x" style="font-size:19px;" aria-hidden="true"></i></button>
       </div>
-      <div id="amc" style="padding:12px;display:flex;flex-direction:column;gap:9px;"></div>
+      <div id="apc" style="padding:14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;"></div>
     </div>
 
     <div style="position:absolute;left:0;right:0;bottom:0;display:flex;background:var(--color-background-primary);border-top:0.5px solid var(--color-border-tertiary);z-index:4;">
-      <button class="navi" id="nav-equip" onclick="aOpen('equip')"><i class="ti ti-anvil" style="font-size:21px;color:var(--color-text-secondary);" aria-hidden="true"></i><div class="lab" style="color:var(--color-text-secondary)">장비</div></button>
-      <button class="navi" id="nav-worker" onclick="aOpen('worker')"><i class="ti ti-users" style="font-size:21px;color:var(--color-text-secondary);" aria-hidden="true"></i><div class="lab" style="color:var(--color-text-secondary)">일꾼</div></button>
-      <button class="navi" id="nav-player" onclick="aOpen('player')"><i class="ti ti-user-up" style="font-size:21px;color:var(--color-text-secondary);" aria-hidden="true"></i><div class="lab" style="color:var(--color-text-secondary)">플레이어</div></button>
-      <button class="navi" onclick="aTemp()"><i class="ti ti-square-dashed" style="font-size:21px;color:var(--color-text-tertiary);" aria-hidden="true"></i><div class="lab">임시1</div></button>
-      <button class="navi" onclick="aTemp()"><i class="ti ti-square-dashed" style="font-size:21px;color:var(--color-text-tertiary);" aria-hidden="true"></i><div class="lab">임시2</div></button>
+      <button class="navi" data-cat="worker"><i class="ti ti-users" aria-hidden="true"></i><div class="lab">일꾼</div></button>
+      <button class="navi" data-cat="equip"><i class="ti ti-sword" aria-hidden="true"></i><div class="lab">장비</div></button>
+      <button class="navi" data-cat="player"><i class="ti ti-user-up" aria-hidden="true"></i><div class="lab">플레이어</div></button>
+      <button class="navi tmp"><i class="ti ti-lock" aria-hidden="true"></i><div class="lab">미정</div></button>
+      <button class="navi tmp"><i class="ti ti-lock" aria-hidden="true"></i><div class="lab">미정</div></button>
     </div>
 
-    <div id="atoast" style="position:absolute;left:50%;bottom:70px;transform:translateX(-50%);background:var(--color-text-primary);color:var(--color-background-primary);font-size:12px;padding:7px 14px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;z-index:5;">준비 중인 슬롯입니다</div>
+    <div id="atoast" style="position:absolute;left:50%;bottom:78px;transform:translateX(-50%);background:var(--color-text-primary);color:var(--color-background-primary);font-size:13px;padding:8px 15px;border-radius:999px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;z-index:5;">준비 중인 슬롯입니다</div>
 
   </div>
 </div>
@@ -94,50 +103,86 @@ body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:c
 <script>
 (function(){
   var META={
-    player:{name:'플레이어 업그레이드',icon:'ti-user-up'},
     worker:{name:'일꾼 업그레이드',icon:'ti-users'},
-    equip:{name:'장비 업그레이드',icon:'ti-anvil'}
+    equip:{name:'장비 업그레이드',icon:'ti-sword'},
+    player:{name:'플레이어 업그레이드',icon:'ti-user-up'}
   };
   var DATA={
-    player:{icon:'ti-user-up',items:[{n:'이동 속도',d:'+5%',lv:'Lv.4',c:'600'},{n:'채굴력',d:'+1',lv:'Lv.2',c:'900'},{n:'인벤토리',d:'+10칸',lv:'Lv.1',c:'1,500'}]},
-    worker:{icon:'ti-users',items:[{n:'일꾼 수',d:'+1명',lv:'Lv.3',c:'2,000'},{n:'작업 속도',d:'+8%',lv:'Lv.5',c:'750'},{n:'자동 운반',d:'해금',lv:'Lv.0',c:'3,200'}]},
-    equip:{icon:'ti-anvil',items:[{n:'대장간 망치',d:'제작 속도 +8%',lv:'Lv.3',c:'850'},{n:'용광로',d:'정제 수율 +1',lv:'Lv.2',c:'1,200'},{n:'정제소',d:'정제 속도 +6%',lv:'Lv.2',c:'1,000'}]}
+    player:[
+      {n:"Player's Speed",lv:'Lv.10',cur:'이동 속도 1.44',next:'1.45',icon:'ti-run',gold:69},
+      {n:'Digging Power',lv:'Lv.10',cur:'채굴력 24',next:'25',icon:'ti-pick',gold:40},
+      {n:'Backpack Capacity',lv:'Lv.1',cur:'가방 용량 10',next:'11',icon:'ti-backpack',gold:25},
+      {n:'Hands Capacity',lv:'Lv.1',cur:'손 용량 5',next:'6',icon:'ti-hand-stop',gold:200},
+      {n:'Digging Speed',lv:'Lv.1',cur:'채굴 속도 1.3',next:'1.32',icon:'ti-bolt',gold:300},
+      {n:'Pickup Radius',lv:'Lv.1',cur:'획득 반경 1.1',next:'1.11',icon:'ti-magnet',gold:300}
+    ],
+    worker:[
+      {n:'Cashier : Checkout Speed',lv:'Lv.5',cur:'정산 쿨타임 3.2초',next:'3.0초',icon:'ti-cash-register',gold:500},
+      {n:'Load Worker : Carry Capacity',lv:'Lv.5',cur:'운반량 6',next:'7',icon:'ti-box',gold:500},
+      {n:'Load Worker : Move Speed',lv:'Lv.5',cur:'이동 속도 2.6',next:'2.8',icon:'ti-run',gold:500},
+      {n:'Craft Worker : Craft Time Rate',lv:'Lv.5',cur:'제작 시간 단축 20%',next:'25%',icon:'ti-hammer',gold:500},
+      {n:'Repairer : Repair Speed',lv:'Lv.5',cur:'수리 속도 6초',next:'5.5초',icon:'ti-tool',gold:500},
+      {n:'Display Worker : Carry Capacity',lv:'Lv.5',cur:'진열 운반량 6',next:'7',icon:'ti-building-store',gold:500},
+      {n:'Display Worker : Move Speed',lv:'Lv.5',cur:'진열 이동 속도 2.6',next:'2.8',icon:'ti-run',gold:500}
+    ],
+    equip:[
+      {n:'검 무기 강화',lv:'Lv.2',cur:'판매가 22',next:'28',icon:'ti-sword',gold:410},
+      {n:'도끼 무기 강화',lv:'Lv.1',cur:'판매가 16',next:'22',icon:'ti-axe',gold:650},
+      {n:'망치 무기 강화',lv:'Lv.1',cur:'판매가 16',next:'22',icon:'ti-hammer',gold:900}
+    ]
   };
+
+  var apc=document.getElementById('apc');
+  var apop=document.getElementById('apop');
+  var abd=document.getElementById('abd');
+  var toast=document.getElementById('atoast');
+
   function render(cur){
-    var d=DATA[cur],html='';
-    d.items.forEach(function(it,i){
-      var fill=i===0?'var(--color-background-info)':'var(--color-background-secondary)';
-      var icol=i===0?'var(--color-text-info)':'var(--color-text-secondary)';
-      html+='<div style="display:flex;align-items:center;gap:10px;padding:11px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);">'+
-        '<div style="width:40px;height:40px;border-radius:var(--border-radius-md);background:'+fill+';display:flex;align-items:center;justify-content:center;color:'+icol+';"><i class="ti '+d.icon+'" style="font-size:21px;"></i></div>'+
-        '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:500;">'+it.n+' <span style="font-size:12px;color:var(--color-text-secondary);font-weight:400;">'+it.lv+'</span></div><div style="font-size:12px;color:var(--color-text-secondary);">'+it.d+'</div></div>'+
-        '<button style="display:flex;align-items:center;gap:5px;background:var(--color-background-secondary);border:none;border-radius:var(--border-radius-md);padding:9px 13px;font-size:13px;font-weight:500;cursor:pointer;color:var(--color-text-primary);"><i class="ti ti-coins" style="font-size:14px;color:var(--color-text-secondary);"></i>'+it.c+'</button>'+
+    var items=DATA[cur],html='';
+    items.forEach(function(it){
+      html+='<div style="display:flex;align-items:center;gap:12px;padding:12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);">'+
+        '<div style="width:46px;height:46px;flex-shrink:0;border-radius:var(--border-radius-md);background:var(--color-background-info);display:flex;align-items:center;justify-content:center;color:var(--color-text-info);"><i class="ti '+it.icon+'" style="font-size:24px;"></i></div>'+
+        '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">'+
+          '<div style="font-size:14px;font-weight:500;line-height:1.3;">'+it.n+'</div>'+
+          '<div style="font-size:12px;color:var(--color-text-tertiary);">'+it.lv+'</div>'+
+          '<div style="font-size:13px;line-height:1.3;"><span style="color:var(--color-text-secondary);">'+it.cur+'</span> <span style="color:var(--color-text-tertiary);">→</span> <span style="color:var(--color-text-info);font-weight:500;">'+it.next+'</span></div>'+
+        '</div>'+
+        '<button class="cost"><i class="ti ti-coins" style="font-size:15px;color:var(--color-text-secondary);"></i>'+it.gold.toLocaleString()+'</button>'+
       '</div>';
     });
-    document.getElementById('amc').innerHTML=html;
+    apc.innerHTML=html;
   }
-  window.aOpen=function(k){
+  function open(k){
     var m=META[k];
-    document.getElementById('ahname').textContent=m.name;
-    document.getElementById('ahicon').className='ti '+m.icon;
-    document.getElementById('abackdrop').style.display='block';
-    document.getElementById('asheet').style.display='flex';
-    ['equip','worker','player'].forEach(function(x){
-      document.getElementById('nav-'+x).classList.toggle('on',x===k);
-    });
+    document.getElementById('apt').textContent=m.name;
+    document.getElementById('api').className='ti '+m.icon;
+    abd.style.display='block';
+    apop.style.display='flex';
+    apop.classList.remove('pop');void apop.offsetWidth;apop.classList.add('pop');
+    document.querySelectorAll('#ap2 .navi[data-cat]').forEach(function(b){b.classList.toggle('on',b.dataset.cat===k);});
+    var icon=document.querySelector('#ap2 .navi[data-cat="'+k+'"] i');
+    if(icon){icon.style.animation='none';void icon.offsetWidth;icon.style.animation='';}
     render(k);
-  };
-  window.aClose=function(){
-    document.getElementById('abackdrop').style.display='none';
-    document.getElementById('asheet').style.display='none';
-    ['equip','worker','player'].forEach(function(x){document.getElementById('nav-'+x).classList.remove('on');});
-  };
+  }
+  function close(){
+    abd.style.display='none';
+    apop.style.display='none';
+    document.querySelectorAll('#ap2 .navi[data-cat]').forEach(function(b){b.classList.remove('on');});
+  }
   var tt;
-  window.aTemp=function(){
-    var el=document.getElementById('atoast');
-    el.style.opacity='1';clearTimeout(tt);
-    tt=setTimeout(function(){el.style.opacity='0';},1300);
-  };
+  function temp(){
+    toast.style.opacity='1';clearTimeout(tt);
+    tt=setTimeout(function(){toast.style.opacity='0';},1300);
+  }
+
+  document.querySelectorAll('#ap2 .navi[data-cat]').forEach(function(b){
+    b.addEventListener('click',function(){open(b.dataset.cat);});
+  });
+  document.querySelectorAll('#ap2 .navi.tmp').forEach(function(b){
+    b.addEventListener('click',temp);
+  });
+  document.getElementById('axbtn').addEventListener('click',close);
+  abd.addEventListener('click',close);
 })();
 </script>
 </body>

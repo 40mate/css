@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Deploy Test Playground</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --line: #263040;
+    --text: #e6edf3;
+    --muted: #8b98a5;
+    --accent: #2dd4bf;
+    --accent2: #a78bfa;
+    --pink: #f472b6;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    min-height: 100%;
+    color: var(--text);
+    background: var(--bg);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+  }
+  #stars { position: fixed; inset: 0; z-index: 0; display: block; }
+  main { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 40px 20px 64px; }
+
+  /* animated gradient title */
+  h1 {
+    margin: 0 0 6px;
+    font-size: clamp(30px, 7vw, 56px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--pink), var(--accent));
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: slide 6s linear infinite;
+  }
+  @keyframes slide { to { background-position: 300% 0; } }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .card {
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 12px 30px rgb(45 212 191 / 15%);
+  }
+  .card h2 { margin: 0 0 12px; font-size: 15px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+
+  /* CSS-only loaders */
+  .loaders { display: flex; align-items: center; gap: 22px; }
+  .spinner { width: 34px; height: 34px; border-radius: 50%; border: 4px solid var(--line); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .pulse { width: 30px; height: 30px; border-radius: 50%; background: var(--pink); animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(0.6); opacity: 0.5; } 50% { transform: scale(1); opacity: 1; } }
+  .bars { display: flex; gap: 4px; align-items: flex-end; height: 34px; }
+  .bars i { width: 6px; background: var(--accent2); border-radius: 3px; animation: eq 1s ease-in-out infinite; }
+  .bars i:nth-child(2){ animation-delay: .15s } .bars i:nth-child(3){ animation-delay: .3s } .bars i:nth-child(4){ animation-delay: .45s }
+  @keyframes eq { 0%,100% { height: 8px } 50% { height: 34px } }
+
+  /* interactive counter */
+  .counter { display: flex; align-items: center; gap: 14px; }
+  .count-val { font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 60px; text-align: center; }
+  button {
+    font: inherit; color: var(--text); cursor: pointer;
+    padding: 8px 14px; border: 1px solid var(--line); border-radius: 10px; background: #0f1620;
+    transition: background 140ms ease, transform 80ms ease;
+  }
+  button:hover { background: #1b2430; }
+  button:active { transform: scale(0.94); }
+  .btn-accent { border-color: var(--accent); color: var(--accent); }
+
+  .clock { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+
+  /* hover box + gradient morph */
+  .morph {
+    height: 90px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    background-size: 200% 200%;
+    animation: morph 5s ease infinite;
+  }
+  @keyframes morph { 0%,100%{ background-position: 0 0; border-radius: 14px } 50%{ background-position: 100% 100%; border-radius: 40px } }
+
+  .float { display: inline-block; animation: float 3s ease-in-out infinite; font-size: 40px; }
+  @keyframes float { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-14px) } }
+
+  input[type=range]{ width: 100%; accent-color: var(--accent); }
+  .swatch { height: 44px; border-radius: 10px; border: 1px solid var(--line); }
+
+  footer { margin-top: 34px; text-align: center; color: var(--muted); font-size: 13px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); font-size: 12px; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<main>
+  <p class="badge">upload &rarr; deploy &rarr; preview</p>
+  <h1>Deploy Test Playground <span class="float">🚀</span></h1>
+  <p class="sub">애니메이션·인터랙션·캔버스·폼 — 업로드/배포/미리보기 검증용 단일 HTML.</p>
+
+  <div class="grid">
+    <div class="card">
+      <h2>CSS 로더</h2>
+      <div class="loaders">
+        <div class="spinner"></div>
+        <div class="pulse"></div>
+        <div class="bars"><i></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>인터랙션 · 카운터</h2>
+      <div class="counter">
+        <button id="dec">−</button>
+        <span class="count-val" id="count">0</span>
+        <button id="inc" class="btn-accent">+</button>
+        <button id="reset">리셋</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>라이브 시계</h2>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+
+    <div class="card">
+      <h2>그라디언트 모프</h2>
+      <div class="morph"></div>
+    </div>
+
+    <div class="card">
+      <h2>컬러 슬라이더</h2>
+      <input type="range" id="hue" min="0" max="360" value="170" />
+      <div class="swatch" id="swatch"></div>
+    </div>
+
+    <div class="card">
+      <h2>폼 테스트</h2>
+      <form id="form" style="display:grid; gap:8px;">
+        <input type="text" id="name" placeholder="이름 입력" style="padding:8px;border-radius:8px;border:1px solid var(--line);background:#0f1620;color:var(--text)" />
+        <button type="submit" class="btn-accent">인사하기</button>
+        <span id="greet" style="color:var(--muted)"></span>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <p>Built for <strong>Deploy CSS Tool</strong> · <span id="stamp"></span></p>
+  </footer>
+</main>
+
+<script>
+  // counter
+  let n = 0;
+  const cv = document.getElementById('count');
+  const set = () => cv.textContent = n;
+  document.getElementById('inc').onclick = () => { n++; set(); };
+  document.getElementById('dec').onclick = () => { n--; set(); };
+  document.getElementById('reset').onclick = () => { n = 0; set(); };
+
+  // clock
+  const clk = document.getElementById('clock');
+  const tick = () => {
+    const d = new Date();
+    clk.textContent = [d.getHours(), d.getMinutes(), d.getSeconds()]
+      .map(x => String(x).padStart(2, '0')).join(':');
+  };
+  tick(); setInterval(tick, 1000);
+
+  // hue slider
+  const hue = document.getElementById('hue');
+  const sw = document.getElementById('swatch');
+  const paint = () => sw.style.background = `hsl(${hue.value} 70% 55%)`;
+  hue.oninput = paint; paint();
+
+  // form
+  document.getElementById('form').onsubmit = (e) => {
+    e.preventDefault();
+    const v = document.getElementById('name').value.trim();
+    document.getElementById('greet').textContent = v ? `안녕하세요, ${v}님! 👋` : '이름을 입력하세요.';
+  };
+
+  // stamp
+  document.getElementById('stamp').textContent = new Date().toLocaleString('ko-KR');
+
+  // starfield canvas
+  const cv2 = document.getElementById('stars');
+  const ctx = cv2.getContext('2d');
+  let stars = [];
+  function resize() {
+    cv2.width = innerWidth; cv2.height = innerHeight;
+    stars = Array.from({ length: 90 }, () => ({
+      x: Math.random() * cv2.width,
+      y: Math.random() * cv2.height,
+      r: Math.random() * 1.6 + 0.3,
+      s: Math.random() * 0.5 + 0.1
+    }));
+  }
+  resize(); addEventListener('resize', resize);
+  (function loop() {
+    ctx.clearRect(0, 0, cv2.width, cv2.height);
+    for (const st of stars) {
+      st.y += st.s; if (st.y > cv2.height) st.y = 0;
+      ctx.globalAlpha = 0.5 + Math.random() * 0.5;
+      ctx.fillStyle = '#2dd4bf';
+      ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, 7); ctx.fill();
+    }
+    requestAnimationFrame(loop);
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,2168 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#050611" />
+  <title>NULL//PRISM — 3D 레이저 퍼즐</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #eefcff;
+      --muted: #8fa7b7;
+      --cyan: #63f6ff;
+      --cyan-soft: rgba(99, 246, 255, .16);
+      --violet: #b793ff;
+      --amber: #ffd66b;
+      --danger: #ff668f;
+      --glass: rgba(8, 13, 28, .64);
+      --glass-strong: rgba(6, 9, 22, .86);
+      --line: rgba(155, 225, 255, .18);
+      --shadow: 0 24px 80px rgba(0, 0, 0, .42);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #050611; }
+    body {
+      font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    button { font: inherit; }
+    button, [role="button"] { -webkit-tap-highlight-color: transparent; }
+
+    #app, #viewport { position: fixed; inset: 0; }
+    #viewport { width: 100%; height: 100%; display: block; outline: none; }
+
+    .vignette,
+    .scanlines,
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .vignette {
+      background:
+        radial-gradient(circle at 50% 48%, transparent 35%, rgba(2, 3, 10, .18) 68%, rgba(0, 0, 5, .72) 112%),
+        linear-gradient(180deg, rgba(0,0,0,.28), transparent 22%, transparent 78%, rgba(0,0,0,.32));
+    }
+
+    .scanlines {
+      opacity: .12;
+      background: repeating-linear-gradient(180deg, transparent 0 3px, rgba(135, 231, 255, .055) 4px);
+      mix-blend-mode: screen;
+    }
+
+    .noise {
+      opacity: .045;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");
+      animation: noiseShift .28s steps(2) infinite;
+      mix-blend-mode: soft-light;
+    }
+
+    @keyframes noiseShift {
+      0% { transform: translate3d(0,0,0); }
+      25% { transform: translate3d(-1.5%,1%,0); }
+      50% { transform: translate3d(1%,-1.5%,0); }
+      75% { transform: translate3d(.5%,1.5%,0); }
+      100% { transform: translate3d(-1%,0,0); }
+    }
+
+    .ui { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
+    .ui button, .ui .interactive { pointer-events: auto; }
+
+    .topbar {
+      position: absolute;
+      top: max(18px, env(safe-area-inset-top));
+      left: max(20px, env(safe-area-inset-left));
+      right: max(20px, env(safe-area-inset-right));
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-shadow: 0 0 24px rgba(99,246,255,.32);
+    }
+
+    .brand-mark {
+      position: relative;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(99,246,255,.56);
+      border-radius: 12px;
+      background: linear-gradient(145deg, rgba(99,246,255,.16), rgba(183,147,255,.08));
+      box-shadow: inset 0 0 20px rgba(99,246,255,.11), 0 0 28px rgba(99,246,255,.12);
+      overflow: hidden;
+    }
+
+    .brand-mark::before,
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      inset: 8px;
+      border: 1px solid var(--cyan);
+      transform: rotate(45deg);
+    }
+    .brand-mark::after {
+      inset: 13px;
+      border-color: var(--violet);
+      transform: rotate(0deg);
+    }
+
+    .eyebrow {
+      color: var(--cyan);
+      font-size: 9px;
+      line-height: 1;
+      letter-spacing: .27em;
+      text-transform: uppercase;
+      opacity: .82;
+      margin-bottom: 5px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(18px, 2vw, 25px);
+      letter-spacing: .075em;
+      font-weight: 760;
+      line-height: 1;
+    }
+
+    .brand h1 span { color: var(--cyan); }
+
+    .stats {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .stat {
+      min-width: 76px;
+      padding: 10px 13px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: linear-gradient(160deg, rgba(9,17,35,.76), rgba(5,8,18,.52));
+      backdrop-filter: blur(14px) saturate(1.2);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+      text-align: right;
+    }
+    .stat .label {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: .16em;
+    }
+    .stat strong {
+      display: block;
+      font-variant-numeric: tabular-nums;
+      font-size: 17px;
+      line-height: 1;
+      letter-spacing: .04em;
+    }
+
+    .icon-btn {
+      width: 42px;
+      min-width: 42px;
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      color: var(--ink);
+      background: rgba(7, 12, 26, .66);
+      backdrop-filter: blur(14px);
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+    }
+    .icon-btn:hover { transform: translateY(-2px); border-color: rgba(99,246,255,.48); box-shadow: 0 0 24px rgba(99,246,255,.10); }
+    .icon-btn:active { transform: scale(.95); }
+
+    .mission {
+      position: absolute;
+      top: 50%;
+      left: max(22px, env(safe-area-inset-left));
+      width: min(300px, 28vw);
+      transform: translateY(-50%);
+      padding: 18px 18px 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(8,14,31,.74), rgba(5,8,19,.48));
+      backdrop-filter: blur(16px) saturate(1.25);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.035);
+      transition: opacity .25s ease, transform .25s ease;
+    }
+
+    .mission::before {
+      content: "";
+      position: absolute;
+      top: -1px;
+      left: 22px;
+      width: 52px;
+      height: 1px;
+      background: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan);
+    }
+
+    .mission-index {
+      color: var(--cyan);
+      font-size: 10px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+    .mission h2 {
+      margin: 7px 0 8px;
+      font-size: clamp(18px, 2.1vw, 25px);
+      letter-spacing: -.02em;
+    }
+    .mission p {
+      margin: 0;
+      color: #aebdca;
+      font-size: 12px;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+
+    .shard-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(163,220,255,.10);
+    }
+    .shard-row span { color: var(--muted); font-size: 10px; letter-spacing: .13em; }
+    .shard-row strong { color: var(--amber); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+    .level-rail {
+      position: absolute;
+      right: max(22px, env(safe-area-inset-right));
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 8px;
+      border: 1px solid rgba(163,220,255,.11);
+      border-radius: 999px;
+      background: rgba(5,9,22,.42);
+      backdrop-filter: blur(12px);
+    }
+
+    .level-dot {
+      position: relative;
+      width: 11px;
+      height: 11px;
+      padding: 0;
+      border: 1px solid rgba(175,220,255,.28);
+      border-radius: 50%;
+      background: rgba(145,190,220,.10);
+      cursor: pointer;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+    .level-dot:hover:not(:disabled) { transform: scale(1.25); border-color: var(--cyan); }
+    .level-dot.active { background: var(--cyan); border-color: white; box-shadow: 0 0 14px var(--cyan); transform: scale(1.18); }
+    .level-dot.done:not(.active) { background: rgba(183,147,255,.72); border-color: rgba(225,212,255,.8); box-shadow: 0 0 8px rgba(183,147,255,.35); }
+    .level-dot:disabled { opacity: .24; cursor: not-allowed; }
+
+    .selection {
+      position: absolute;
+      right: max(72px, calc(env(safe-area-inset-right) + 58px));
+      bottom: max(96px, calc(env(safe-area-inset-bottom) + 82px));
+      width: 230px;
+      padding: 14px 15px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: rgba(6, 10, 24, .68);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(12px) scale(.98);
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .selection.visible { opacity: 1; transform: translateY(0) scale(1); }
+    .selection-label { color: var(--muted); font-size: 9px; letter-spacing: .18em; }
+    .selection-name { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 5px; }
+    .selection-name strong { font-size: 15px; }
+    .axis-chip {
+      padding: 4px 7px;
+      border: 1px solid rgba(99,246,255,.24);
+      border-radius: 999px;
+      color: var(--cyan);
+      background: rgba(99,246,255,.07);
+      font-size: 10px;
+      letter-spacing: .08em;
+      white-space: nowrap;
+    }
+    .selection-tip { margin-top: 8px; color: #8da0ae; font-size: 10px; line-height: 1.5; }
+
+    .controls {
+      position: absolute;
+      left: 50%;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      padding: 7px;
+      border: 1px solid rgba(163,220,255,.13);
+      border-radius: 18px;
+      background: rgba(5,9,21,.62);
+      backdrop-filter: blur(18px) saturate(1.3);
+      box-shadow: 0 15px 50px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.035);
+    }
+
+    .control-btn {
+      min-width: 78px;
+      height: 48px;
+      padding: 0 14px;
+      border: 1px solid rgba(159,218,255,.13);
+      border-radius: 12px;
+      color: #b9c9d5;
+      background: rgba(13,20,38,.58);
+      cursor: pointer;
+      transition: transform .14s ease, color .14s ease, border-color .14s ease, background .14s ease, box-shadow .14s ease;
+    }
+    .control-btn small { display: block; margin-top: 2px; color: #667989; font-size: 8px; letter-spacing: .12em; }
+    .control-btn:hover:not(:disabled) { transform: translateY(-2px); color: white; border-color: rgba(99,246,255,.40); background: rgba(24,39,63,.76); }
+    .control-btn:active:not(:disabled) { transform: scale(.96); }
+    .control-btn:disabled { opacity: .30; cursor: not-allowed; }
+
+    .control-btn.primary {
+      min-width: 94px;
+      color: #061318;
+      border-color: rgba(210,255,255,.84);
+      background: linear-gradient(135deg, #baffff, #58deef 58%, #85a8ff);
+      box-shadow: 0 0 24px rgba(99,246,255,.18), inset 0 1px 0 rgba(255,255,255,.75);
+      font-weight: 800;
+    }
+    .control-btn.primary small { color: rgba(3,30,38,.65); }
+    .control-btn.primary:hover:not(:disabled) { color: #031013; border-color: white; background: linear-gradient(135deg, #e4ffff, #72ecf6 58%, #a8bbff); box-shadow: 0 0 30px rgba(99,246,255,.32); }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: max(92px, calc(env(safe-area-inset-top) + 76px));
+      max-width: min(520px, 88vw);
+      padding: 10px 15px;
+      border: 1px solid rgba(99,246,255,.24);
+      border-radius: 999px;
+      color: #d9fbff;
+      background: rgba(6,13,27,.82);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 0 30px rgba(99,246,255,.09);
+      font-size: 11px;
+      letter-spacing: .02em;
+      text-align: center;
+      opacity: 0;
+      transform: translate(-50%, -8px) scale(.98);
+      transition: opacity .22s ease, transform .22s ease;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    .toast.warn { border-color: rgba(255,214,107,.34); color: #ffe9a8; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: radial-gradient(circle at center, rgba(9,20,38,.32), rgba(2,3,10,.78));
+      backdrop-filter: blur(10px);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .35s ease, visibility .35s ease;
+      pointer-events: none;
+    }
+    .overlay.visible { opacity: 1; visibility: visible; pointer-events: auto; }
+
+    .panel {
+      position: relative;
+      width: min(560px, 92vw);
+      padding: clamp(24px, 4vw, 42px);
+      border: 1px solid rgba(151,226,255,.24);
+      border-radius: 26px;
+      background:
+        linear-gradient(145deg, rgba(11,20,41,.91), rgba(5,8,20,.94)),
+        radial-gradient(circle at 80% 0%, rgba(183,147,255,.18), transparent 34%);
+      box-shadow: 0 36px 120px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.055);
+      overflow: hidden;
+    }
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(125deg, rgba(99,246,255,.55), transparent 28%, transparent 72%, rgba(183,147,255,.48));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    .panel-kicker { color: var(--cyan); font-size: 10px; letter-spacing: .25em; text-transform: uppercase; }
+    .panel h2 { margin: 10px 0 12px; font-size: clamp(34px, 7vw, 68px); line-height: .92; letter-spacing: -.055em; }
+    .panel h2 span { display: block; color: transparent; -webkit-text-stroke: 1px rgba(172,240,255,.65); font-size: .48em; letter-spacing: .16em; margin-bottom: 9px; }
+    .panel p { margin: 0; max-width: 470px; color: #a9bbc8; line-height: 1.75; font-size: 13px; word-break: keep-all; }
+
+    .howto {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 24px 0;
+    }
+    .howto-item {
+      min-height: 88px;
+      padding: 12px;
+      border: 1px solid rgba(160,219,255,.12);
+      border-radius: 13px;
+      background: rgba(142,205,255,.035);
+    }
+    .howto-item b { display: block; color: var(--ink); font-size: 11px; margin: 7px 0 4px; }
+    .howto-item span { color: #748999; font-size: 9px; line-height: 1.45; }
+    .howto-icon { color: var(--cyan); font-size: 18px; }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-width: 190px;
+      height: 52px;
+      padding: 0 22px;
+      border: 1px solid rgba(229,255,255,.94);
+      border-radius: 14px;
+      color: #031014;
+      background: linear-gradient(135deg, #d9ffff, #63ecf6 55%, #9eb3ff);
+      box-shadow: 0 0 34px rgba(99,246,255,.22);
+      font-weight: 850;
+      cursor: pointer;
+      transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+    }
+    .cta:hover { transform: translateY(-2px); box-shadow: 0 0 44px rgba(99,246,255,.36); filter: brightness(1.08); }
+    .cta:active { transform: scale(.97); }
+
+    .win-panel { text-align: center; width: min(500px, 92vw); }
+    .win-glyph {
+      width: 82px;
+      height: 82px;
+      margin: 0 auto 18px;
+      border: 1px solid rgba(99,246,255,.48);
+      border-radius: 24px;
+      display: grid;
+      place-items: center;
+      color: var(--cyan);
+      font-size: 34px;
+      background: radial-gradient(circle, rgba(99,246,255,.16), rgba(183,147,255,.05));
+      box-shadow: 0 0 50px rgba(99,246,255,.16), inset 0 0 24px rgba(99,246,255,.08);
+      animation: glyphPulse 1.8s ease-in-out infinite;
+    }
+    @keyframes glyphPulse { 50% { transform: scale(1.055) rotate(4deg); box-shadow: 0 0 68px rgba(99,246,255,.28); } }
+    .win-panel h2 { font-size: clamp(28px, 6vw, 48px); margin: 0 0 10px; letter-spacing: -.04em; }
+    .win-panel p { margin: 0 auto; }
+    .result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 24px 0; }
+    .result-cell { padding: 13px 8px; border: 1px solid rgba(160,219,255,.12); border-radius: 13px; background: rgba(142,205,255,.035); }
+    .result-cell span { display: block; color: #718795; font-size: 8px; letter-spacing: .15em; margin-bottom: 5px; }
+    .result-cell strong { font-size: 18px; font-variant-numeric: tabular-nums; }
+    .win-actions { display: flex; justify-content: center; gap: 8px; }
+    .ghost-btn {
+      height: 52px;
+      padding: 0 20px;
+      border: 1px solid rgba(160,219,255,.16);
+      border-radius: 14px;
+      color: #b7cad7;
+      background: rgba(19,28,46,.58);
+      cursor: pointer;
+    }
+
+    .loading {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: grid;
+      place-items: center;
+      background: #050611;
+      transition: opacity .5s ease, visibility .5s ease;
+    }
+    .loading.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader-wrap { text-align: center; }
+    .loader-orbit { position: relative; width: 70px; height: 70px; margin: 0 auto 18px; }
+    .loader-orbit::before, .loader-orbit::after {
+      content: "";
+      position: absolute;
+      inset: 7px;
+      border: 1px solid var(--cyan);
+      border-radius: 50%;
+      animation: loaderSpin 1.4s linear infinite;
+    }
+    .loader-orbit::after { inset: 18px; border-color: var(--violet); animation-direction: reverse; animation-duration: .9s; }
+    @keyframes loaderSpin { to { transform: rotate(360deg) rotateX(65deg); } }
+    .loading span { color: var(--muted); font-size: 9px; letter-spacing: .23em; }
+
+    .webgl-error {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: none;
+      place-items: center;
+      padding: 28px;
+      text-align: center;
+      background: #050611;
+    }
+    .webgl-error.visible { display: grid; }
+    .webgl-error div { max-width: 520px; }
+    .webgl-error h2 { color: var(--cyan); }
+    .webgl-error p { color: var(--muted); line-height: 1.7; }
+
+    :focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+    @media (max-width: 900px) {
+      .mission { top: 92px; left: 18px; width: min(310px, calc(100vw - 104px)); transform: none; padding: 13px 14px; }
+      .mission p { display: none; }
+      .mission h2 { margin-bottom: 3px; font-size: 18px; }
+      .shard-row { margin-top: 8px; padding-top: 8px; }
+      .selection { right: 18px; bottom: 94px; width: 205px; }
+      .stats .stat:nth-child(2) { display: none; }
+      .level-rail { right: 14px; }
+    }
+
+    @media (max-width: 640px) {
+      .topbar { top: max(11px, env(safe-area-inset-top)); left: 12px; right: 12px; }
+      .brand-mark { width: 36px; height: 36px; border-radius: 10px; }
+      .brand h1 { font-size: 16px; }
+      .eyebrow { font-size: 7px; }
+      .stat { min-width: 57px; padding: 8px 9px; border-radius: 11px; }
+      .stat strong { font-size: 14px; }
+      .icon-btn { width: 36px; min-width: 36px; height: 36px; border-radius: 11px; }
+      .mission { top: 64px; left: 12px; width: calc(100vw - 72px); padding: 10px 12px; border-radius: 13px; }
+      .mission h2 { font-size: 15px; margin: 4px 0 1px; }
+      .mission-index { font-size: 8px; }
+      .shard-row { margin-top: 5px; padding-top: 6px; }
+      .level-rail { right: 8px; padding: 8px 6px; gap: 6px; }
+      .level-dot { width: 9px; height: 9px; }
+      .controls { width: calc(100vw - 18px); bottom: max(8px, env(safe-area-inset-bottom)); gap: 5px; padding: 5px; border-radius: 15px; }
+      .control-btn { min-width: 0; flex: 1 1 0; height: 45px; padding: 0 7px; font-size: 11px; border-radius: 10px; }
+      .control-btn small { font-size: 7px; }
+      .control-btn.primary { min-width: 0; }
+      .selection { left: 12px; right: auto; bottom: 68px; width: 180px; padding: 10px 12px; }
+      .selection-tip { display: none; }
+      .howto { grid-template-columns: 1fr; gap: 6px; margin: 18px 0; }
+      .howto-item { min-height: 0; display: grid; grid-template-columns: 30px 1fr; grid-template-rows: auto auto; align-items: center; padding: 9px 10px; }
+      .howto-icon { grid-row: 1 / 3; }
+      .howto-item b { margin: 0; }
+      .panel { padding: 24px 20px; }
+      .panel h2 { font-size: 43px; }
+      .panel p { font-size: 11px; }
+      .result-grid { margin: 18px 0; }
+      .result-cell strong { font-size: 15px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+    }
+  </style>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.min.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <canvas id="viewport" aria-label="NULL PRISM 3D 퍼즐 게임 화면"></canvas>
+    <div class="vignette"></div>
+    <div class="scanlines"></div>
+    <div class="noise"></div>
+
+    <div class="ui">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <div>
+            <div class="eyebrow">Dimensional archive protocol</div>
+            <h1>NULL<span>//</span>PRISM</h1>
+          </div>
+        </div>
+
+        <div class="stats interactive">
+          <div class="stat">
+            <span class="label">MOVE</span>
+            <strong id="moveValue">00</strong>
+          </div>
+          <div class="stat">
+            <span class="label">BEST</span>
+            <strong id="bestValue">--</strong>
+          </div>
+          <div class="stat">
+            <span class="label">TIME</span>
+            <strong id="timeValue">00:00</strong>
+          </div>
+          <button class="icon-btn" id="soundBtn" type="button" aria-label="소리 켜기/끄기" title="소리 켜기/끄기 (S)">◉</button>
+        </div>
+      </div>
+
+      <section class="mission">
+        <div class="mission-index" id="missionIndex">SECTOR 01 / 08</div>
+        <h2 id="missionTitle">첫 굴절</h2>
+        <p id="missionText">프리즘을 회전시켜 빛이 모든 기억 파편을 통과한 뒤 아카이브 코어에 닿게 하세요.</p>
+        <div class="shard-row">
+          <span>MEMORY SHARDS</span>
+          <strong id="shardValue">0 / 0</strong>
+        </div>
+      </section>
+
+      <nav class="level-rail interactive" id="levelRail" aria-label="레벨 선택"></nav>
+
+      <section class="selection" id="selectionCard" aria-live="polite">
+        <div class="selection-label">SELECTED PRISM</div>
+        <div class="selection-name">
+          <strong id="selectionName">PRISM 01</strong>
+          <span class="axis-chip" id="axisChip">XY 정위상</span>
+        </div>
+        <div class="selection-tip">같은 프리즘을 다시 누르거나 하단 회전 버튼을 사용하세요.</div>
+      </section>
+
+      <div class="controls interactive" aria-label="퍼즐 조작">
+        <button class="control-btn" id="undoBtn" type="button">되돌리기<small>Z</small></button>
+        <button class="control-btn primary" id="prevBtn" type="button">↺ 역회전<small>Q</small></button>
+        <button class="control-btn primary" id="nextBtn" type="button">정회전 ↻<small>E</small></button>
+        <button class="control-btn" id="hintBtn" type="button">신호 탐색<small>H</small></button>
+        <button class="control-btn" id="resetBtn" type="button">초기화<small>R</small></button>
+      </div>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="overlay visible" id="introOverlay">
+      <section class="panel">
+        <div class="panel-kicker">Archive breach detected</div>
+        <h2><span>3D LIGHT PUZZLE</span>공허 프리즘</h2>
+        <p>차원이 붕괴하며 빛의 기억이 여섯 방향으로 흩어졌습니다. 3차원 프리즘을 돌려 광선을 재구성하고, 모든 기억 파편을 관통해 잠든 코어를 깨우세요.</p>
+        <div class="howto">
+          <div class="howto-item"><div class="howto-icon">◇</div><b>프리즘 선택</b><span>빛나는 판을 클릭하거나 탭</span></div>
+          <div class="howto-item"><div class="howto-icon">↻</div><b>6축 회전</b><span>Q / E 또는 하단 버튼</span></div>
+          <div class="howto-item"><div class="howto-icon">◎</div><b>공간 관찰</b><span>빈 공간 드래그 · 휠 줌</span></div>
+        </div>
+        <button class="cta" id="startBtn" type="button">시스템 기동 <span>→</span></button>
+      </section>
+    </div>
+
+    <div class="overlay" id="winOverlay">
+      <section class="panel win-panel">
+        <div class="win-glyph">◇</div>
+        <div class="panel-kicker">Memory lattice restored</div>
+        <h2 id="winTitle">코어 동기화 완료</h2>
+        <p id="winText">빛의 기억이 다시 연결되었습니다.</p>
+        <div class="result-grid">
+          <div class="result-cell"><span>MOVES</span><strong id="resultMoves">00</strong></div>
+          <div class="result-cell"><span>TIME</span><strong id="resultTime">00:00</strong></div>
+          <div class="result-cell"><span>BEST</span><strong id="resultBest">00</strong></div>
+        </div>
+        <div class="win-actions">
+          <button class="ghost-btn" id="replayBtn" type="button">다시 풀기</button>
+          <button class="cta" id="nextLevelBtn" type="button">다음 섹터 <span>→</span></button>
+        </div>
+      </section>
+    </div>
+
+    <div class="loading" id="loadingScreen">
+      <div class="loader-wrap">
+        <div class="loader-orbit"></div>
+        <span>CONSTRUCTING DIMENSION</span>
+      </div>
+    </div>
+
+    <div class="webgl-error" id="webglError">
+      <div>
+        <h2>3D 차원을 열 수 없습니다</h2>
+        <p>이 게임은 WebGL을 지원하는 최신 브라우저가 필요합니다. Chrome, Edge, Safari 또는 Firefox의 최신 버전에서 다시 열어주세요.</p>
+      </div>
+    </div>
+  </div>
+
+  <noscript>이 게임을 실행하려면 JavaScript를 활성화해야 합니다.</noscript>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+    const $ = (selector) => document.querySelector(selector);
+    const canvas = $('#viewport');
+    const loadingScreen = $('#loadingScreen');
+    const introOverlay = $('#introOverlay');
+    const winOverlay = $('#winOverlay');
+    const toast = $('#toast');
+
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isCoarsePointer = matchMedia('(pointer: coarse)').matches;
+    const isSmallScreen = matchMedia('(max-width: 700px)').matches;
+
+    const MIRROR_STATES = [
+      { name: 'XY 정위상', short: 'XY +', normal: [ 1, -1,  0], color: 0x62f6ff },
+      { name: 'XY 역위상', short: 'XY −', normal: [ 1,  1,  0], color: 0x65c8ff },
+      { name: 'XZ 정위상', short: 'XZ +', normal: [ 1,  0, -1], color: 0xb793ff },
+      { name: 'XZ 역위상', short: 'XZ −', normal: [ 1,  0,  1], color: 0xf08dff },
+      { name: 'YZ 정위상', short: 'YZ +', normal: [ 0,  1, -1], color: 0xffd66b },
+      { name: 'YZ 역위상', short: 'YZ −', normal: [ 0,  1,  1], color: 0xff9e76 }
+    ];
+
+    const RAW_LEVELS = [
+      {
+        name: '첫 굴절',
+        text: '평면을 벗어나는 순간부터 진짜 퍼즐이 시작됩니다. 세 프리즘으로 광선을 코어까지 유도하세요.',
+        dims: [5, 4, 5],
+        path: [[0,1,0], [2,1,0], [2,1,3], [2,3,3], [4,3,3]],
+        crystals: [[1,1,0], [2,1,2], [2,2,3], [3,3,3]],
+        decoys: [[4,0,1,4]], blockers: [[0,3,4]], scramble: [2,3,1]
+      },
+      {
+        name: '낙하하는 빛',
+        text: '광선은 아래로도 흐릅니다. 높이 차를 읽고 프리즘의 축 조합을 바꾸세요.',
+        dims: [5, 4, 5],
+        path: [[4,0,4], [4,0,2], [1,0,2], [1,3,2], [1,3,0], [4,3,0]],
+        crystals: [[4,0,3], [2,0,2], [1,2,2], [1,3,1], [3,3,0]],
+        decoys: [[0,1,4,1], [3,2,4,5]], blockers: [[2,2,0], [0,0,0]], scramble: [1,4,2,5]
+      },
+      {
+        name: '뒤틀린 서가',
+        text: '길어진 광로와 가짜 프리즘이 판단을 흐립니다. 빛의 현재 진행축부터 추적하세요.',
+        dims: [5, 4, 5],
+        path: [[0,3,4], [3,3,4], [3,1,4], [3,1,1], [1,1,1], [1,3,1], [1,3,3], [4,3,3]],
+        crystals: [[2,3,4], [3,2,4], [3,1,2], [2,1,1], [1,2,1], [1,3,2], [3,3,3]],
+        decoys: [[0,0,2,0], [4,2,0,3], [2,0,4,5]], blockers: [[4,0,4], [0,2,2]], scramble: [4,1,3,2,5,1]
+      },
+      {
+        name: '역위상',
+        text: '같은 두 축이라도 정위상과 역위상은 빛을 반대 방향으로 꺾습니다. 부호까지 읽으세요.',
+        dims: [5, 5, 5],
+        path: [[0,0,2], [2,0,2], [2,4,2], [2,4,4], [4,4,4], [4,1,4], [1,1,4], [1,1,0], [4,1,0]],
+        crystals: [[1,0,2], [2,2,2], [2,4,3], [3,4,4], [4,2,4], [2,1,4], [1,1,2], [3,1,0]],
+        decoys: [[0,4,0,2], [3,2,1,4], [4,0,0,0]], blockers: [[0,2,4], [3,3,0], [0,0,4]], scramble: [5,2,4,1,3,5,2]
+      },
+      {
+        name: '공허의 계단',
+        text: '빛이 층마다 방향을 바꿉니다. 한 번의 회전이 멀리 있는 광로 전체를 다시 씁니다.',
+        dims: [6, 5, 5],
+        path: [[0,0,0], [3,0,0], [3,2,0], [3,2,4], [5,2,4], [5,4,4], [1,4,4], [1,4,1], [1,1,1], [4,1,1], [4,1,3]],
+        crystals: [[2,0,0], [3,1,0], [3,2,2], [4,2,4], [5,3,4], [3,4,4], [1,4,2], [1,2,1], [3,1,1], [4,1,2]],
+        decoys: [[0,4,2,3], [5,0,2,0], [2,3,1,5], [4,3,0,2]], blockers: [[0,2,4], [2,0,4], [5,4,0]], scramble: [1,3,5,2,4,1,5,3,2]
+      },
+      {
+        name: '유령 회로',
+        text: '광선이 이전 경로 가까이 되돌아옵니다. 반복 루프를 피하고 기억 파편의 점등 순서를 확인하세요.',
+        dims: [6, 5, 6],
+        path: [[5,4,5], [2,4,5], [2,1,5], [2,1,2], [5,1,2], [5,3,2], [1,3,2], [1,3,0], [1,0,0], [4,0,0], [4,0,4], [0,0,4]],
+        crystals: [[3,4,5], [2,2,5], [2,1,3], [4,1,2], [5,2,2], [3,3,2], [1,3,1], [1,1,0], [3,0,0], [4,0,2], [2,0,4]],
+        decoys: [[0,4,0,4], [5,0,5,1], [3,2,3,5], [0,2,5,2], [5,4,1,0]], blockers: [[0,1,1], [3,4,0], [5,2,5], [0,4,4]], scramble: [2,5,1,4,3,2,5,1,4,3]
+      },
+      {
+        name: '쌍둥이 나선',
+        text: '서로 닮은 두 나선이 겹칩니다. 가짜 프리즘에 속지 말고 활성 광선의 끝점을 기준으로 판단하세요.',
+        dims: [6, 6, 6],
+        path: [[0,2,5], [4,2,5], [4,5,5], [4,5,1], [1,5,1], [1,1,1], [1,1,4], [5,1,4], [5,4,4], [2,4,4], [2,4,0], [2,0,0], [5,0,0], [5,0,2]],
+        crystals: [[2,2,5], [4,4,5], [4,5,3], [2,5,1], [1,3,1], [1,1,3], [3,1,4], [5,3,4], [3,4,4], [2,4,2], [2,2,0], [4,0,0], [5,0,1]],
+        decoys: [[0,5,5,2], [5,5,0,4], [0,0,3,1], [3,3,2,5], [5,2,1,0], [0,4,1,3]], blockers: [[0,0,0], [3,2,2], [5,5,5], [0,3,4], [4,3,0]], scramble: [3,1,5,2,4,3,1,5,2,4,3,1]
+      },
+      {
+        name: '아카이브 코어',
+        text: '최종 프로토콜입니다. 모든 축과 위상이 얽힌 광로를 복구해 공허 속 기억 저장소를 완전히 재기동하세요.',
+        dims: [7, 6, 7],
+        path: [[0,0,6], [3,0,6], [3,4,6], [3,4,2], [6,4,2], [6,1,2], [1,1,2], [1,5,2], [1,5,5], [5,5,5], [5,2,5], [5,2,0], [2,2,0], [2,0,0], [6,0,0], [6,0,4], [0,0,4]],
+        crystals: [[2,0,6], [3,2,6], [3,4,4], [5,4,2], [6,2,2], [3,1,2], [1,3,2], [1,5,4], [3,5,5], [5,3,5], [5,2,2], [3,2,0], [2,1,0], [4,0,0], [6,0,2], [3,0,4]],
+        decoys: [[0,5,0,1], [6,5,6,4], [0,3,3,2], [4,3,4,5], [6,2,6,0], [2,5,0,3], [0,1,0,5], [4,0,3,1]], blockers: [[0,5,6], [6,5,0], [0,2,2], [4,4,0], [2,3,5], [6,3,4]], scramble: [5,3,1,4,2,5,3,1,4,2,5,3,1,4,2]
+      }
+    ];
+
+    const SAVE_KEY = 'nullPrism3D_v1';
+    let save = { unlocked: 1, completed: {}, bestMoves: {}, bestTimes: {}, sound: true };
+    try { save = { ...save, ...JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') }; } catch (_) {}
+
+    let renderer, scene, camera, controls, composer, bloomPass;
+    let worldGroup, puzzleGroup, beamGroup, fxGroup, backgroundGroup;
+    let raycaster, pointer;
+    let levelIndex = 0;
+    let currentLevel = null;
+    let mirrorObjects = [];
+    let crystalObjects = new Map();
+    let receiverObject = null;
+    let emitterObject = null;
+    let blockerObjects = [];
+    let clickableMeshes = [];
+    let selectedMirror = null;
+    let hoveredMirror = null;
+    let selectionHalo = null;
+    let moveCount = 0;
+    let undoStack = [];
+    let started = false;
+    let solved = false;
+    let levelStartTime = 0;
+    let frozenElapsed = 0;
+    let lastUiClockUpdate = 0;
+    let pointerDown = null;
+    let toastTimer = null;
+    let hintMirror = null;
+    let hintUntil = 0;
+    let beamPath = [];
+    let beamLengths = [];
+    let beamTotalLength = 0;
+    let beamParticlePoints = null;
+    let beamMaterials = [];
+    let burstPoints = null;
+    let audio = null;
+    let ambientDrone = null;
+    let cameraTween = null;
+    let levelLoadToken = 0;
+
+    const timer = new THREE.Timer();
+    timer.connect(document);
+    const tmpV1 = new THREE.Vector3();
+    const tmpV2 = new THREE.Vector3();
+    const tmpV3 = new THREE.Vector3();
+    const Z_AXIS = new THREE.Vector3(0, 0, 1);
+    const Y_AXIS = new THREE.Vector3(0, 1, 0);
+
+    function vec(a) { return new THREE.Vector3(a[0], a[1], a[2]); }
+    function key(a) { return Array.isArray(a) ? a.join(',') : `${a.x},${a.y},${a.z}`; }
+    function clampState(v) { return (v % 6 + 6) % 6; }
+
+    function cardinalBetween(a, b) {
+      const d = vec(b).sub(vec(a));
+      const nonZero = [Math.abs(d.x) > 0, Math.abs(d.y) > 0, Math.abs(d.z) > 0].filter(Boolean).length;
+      if (nonZero !== 1) throw new Error(`Path segment must be axis aligned: ${a} → ${b}`);
+      d.set(Math.sign(d.x), Math.sign(d.y), Math.sign(d.z));
+      return d;
+    }
+
+    function reflectedDirection(direction, stateIndex) {
+      const n = vec(MIRROR_STATES[stateIndex].normal).normalize();
+      const r = direction.clone().sub(n.multiplyScalar(2 * direction.dot(n)));
+      r.set(
+        Math.abs(r.x) < .45 ? 0 : Math.sign(r.x),
+        Math.abs(r.y) < .45 ? 0 : Math.sign(r.y),
+        Math.abs(r.z) < .45 ? 0 : Math.sign(r.z)
+      );
+      return r;
+    }
+
+    function inferMirrorState(inDir, outDir) {
+      for (let i = 0; i < MIRROR_STATES.length; i++) {
+        if (reflectedDirection(inDir, i).equals(outDir)) return i;
+      }
+      throw new Error(`No mirror state for ${inDir.toArray()} → ${outDir.toArray()}`);
+    }
+
+    function buildLevel(raw) {
+      const path = raw.path.map(p => [...p]);
+      const mirrors = [];
+      for (let i = 1; i < path.length - 1; i++) {
+        const inDir = cardinalBetween(path[i - 1], path[i]);
+        const outDir = cardinalBetween(path[i], path[i + 1]);
+        if (Math.abs(inDir.dot(outDir)) > .001) throw new Error(`Turn ${i} is not perpendicular`);
+        const solutionState = inferMirrorState(inDir, outDir);
+        const offset = raw.scramble[i - 1] ?? ((i * 2 + 1) % 5 + 1);
+        mirrors.push({
+          id: `main-${i}`,
+          pos: [...path[i]],
+          state: clampState(solutionState + offset),
+          initialState: clampState(solutionState + offset),
+          solutionState,
+          essential: true
+        });
+      }
+      (raw.decoys || []).forEach((d, i) => mirrors.push({
+        id: `decoy-${i}`,
+        pos: d.slice(0, 3),
+        state: clampState(d[3] ?? i),
+        initialState: clampState(d[3] ?? i),
+        solutionState: null,
+        essential: false
+      }));
+      return {
+        ...raw,
+        path,
+        start: path[0],
+        receiver: path[path.length - 1],
+        startDir: cardinalBetween(path[0], path[1]),
+        mirrors,
+        crystals: (raw.crystals || []).map(p => [...p]),
+        blockers: (raw.blockers || []).map(p => [...p])
+      };
+    }
+
+    const LEVELS = RAW_LEVELS.map(buildLevel);
+
+    function saveProgress() {
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (_) {}
+    }
+
+    function formatTime(ms) {
+      const total = Math.max(0, Math.floor(ms / 1000));
+      const m = Math.floor(total / 60).toString().padStart(2, '0');
+      const s = (total % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function currentElapsed() {
+      if (!started) return 0;
+      return solved ? frozenElapsed : performance.now() - levelStartTime;
+    }
+
+    function showToast(message, kind = '', duration = 2100) {
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.className = `toast show ${kind}`.trim();
+      toastTimer = setTimeout(() => toast.className = 'toast', duration);
+    }
+
+    function setControlsEnabled() {
+      const hasSelection = !!selectedMirror && !solved && started;
+      $('#prevBtn').disabled = !hasSelection;
+      $('#nextBtn').disabled = !hasSelection;
+      $('#undoBtn').disabled = undoStack.length === 0 || solved || !started;
+      $('#hintBtn').disabled = solved || !started;
+      $('#resetBtn').disabled = solved || !started;
+    }
+
+    function updateHud() {
+      $('#moveValue').textContent = String(moveCount).padStart(2, '0');
+      const best = save.bestMoves[levelIndex];
+      $('#bestValue').textContent = Number.isFinite(best) ? String(best).padStart(2, '0') : '--';
+      $('#timeValue').textContent = formatTime(currentElapsed());
+      $('#missionIndex').textContent = `SECTOR ${String(levelIndex + 1).padStart(2, '0')} / ${String(LEVELS.length).padStart(2, '0')}`;
+      $('#missionTitle').textContent = currentLevel.name;
+      $('#missionText').textContent = currentLevel.text;
+      setControlsEnabled();
+    }
+
+    function updateLevelRail() {
+      const rail = $('#levelRail');
+      rail.innerHTML = '';
+      LEVELS.forEach((level, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'level-dot';
+        btn.title = `${i + 1}. ${level.name}`;
+        btn.setAttribute('aria-label', `${i + 1}번 레벨 ${level.name}`);
+        btn.disabled = i >= save.unlocked;
+        if (i === levelIndex) btn.classList.add('active');
+        if (save.completed[i]) btn.classList.add('done');
+        btn.addEventListener('click', () => {
+          if (i === levelIndex || i >= save.unlocked) return;
+          winOverlay.classList.remove('visible');
+          loadLevel(i);
+          sound('ui');
+        });
+        rail.appendChild(btn);
+      });
+    }
+
+    function initAudio() {
+      if (audio) {
+        if (audio.state === 'suspended') audio.resume();
+        return;
+      }
+      try {
+        audio = new (window.AudioContext || window.webkitAudioContext)();
+        const master = audio.createGain();
+        master.gain.value = save.sound ? .24 : 0;
+        master.connect(audio.destination);
+        audio.master = master;
+        startAmbient();
+      } catch (_) {}
+    }
+
+    function startAmbient() {
+      if (!audio || ambientDrone) return;
+      const gain = audio.createGain();
+      gain.gain.value = .016;
+      const filter = audio.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 320;
+      const o1 = audio.createOscillator();
+      const o2 = audio.createOscillator();
+      o1.type = 'sine'; o2.type = 'triangle';
+      o1.frequency.value = 48; o2.frequency.value = 72.3;
+      o1.detune.value = -7; o2.detune.value = 5;
+      o1.connect(filter); o2.connect(filter); filter.connect(gain); gain.connect(audio.master);
+      o1.start(); o2.start();
+      ambientDrone = { o1, o2, gain };
+    }
+
+    function tone(freq, duration = .08, gainValue = .08, type = 'sine', slideTo = null, delay = 0) {
+      if (!audio || !save.sound) return;
+      const now = audio.currentTime + delay;
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+      if (slideTo) osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), now + duration);
+      gain.gain.setValueAtTime(.0001, now);
+      gain.gain.exponentialRampToValueAtTime(gainValue, now + .012);
+      gain.gain.exponentialRampToValueAtTime(.0001, now + duration);
+      osc.connect(gain); gain.connect(audio.master);
+      osc.start(now); osc.stop(now + duration + .03);
+    }
+
+    function sound(type) {
+      if (!save.sound) return;
+      initAudio();
+      if (type === 'select') tone(520, .06, .05, 'sine', 690);
+      if (type === 'rotate') { tone(190, .12, .07, 'triangle', 430); tone(620, .08, .025, 'sine', 760, .035); }
+      if (type === 'undo') tone(380, .09, .05, 'triangle', 210);
+      if (type === 'reset') tone(210, .18, .06, 'sawtooth', 90);
+      if (type === 'ui') tone(440, .06, .035, 'sine', 510);
+      if (type === 'hint') { tone(740, .12, .055, 'sine', 980); tone(980, .12, .035, 'sine', 1180, .08); }
+      if (type === 'shard') tone(640, .12, .05, 'sine', 930);
+      if (type === 'win') {
+        [0, .13, .26, .42].forEach((d, i) => tone([392, 523.25, 659.25, 783.99][i], .42, .07, 'sine', [523,659,784,1046][i], d));
+      }
+    }
+
+    function toggleSound() {
+      save.sound = !save.sound;
+      saveProgress();
+      initAudio();
+      if (audio?.master) audio.master.gain.setTargetAtTime(save.sound ? .24 : 0, audio.currentTime, .04);
+      $('#soundBtn').textContent = save.sound ? '◉' : '○';
+      $('#soundBtn').title = save.sound ? '소리 끄기 (S)' : '소리 켜기 (S)';
+      if (save.sound) sound('ui');
+    }
+
+    function canUseWebGL() {
+      try {
+        const c = document.createElement('canvas');
+        return !!(window.WebGL2RenderingContext && c.getContext('webgl2')) || !!c.getContext('webgl');
+      } catch (_) { return false; }
+    }
+
+    function makeRadialTexture(inner = 'rgba(255,255,255,1)', mid = 'rgba(120,240,255,.35)', outer = 'rgba(0,0,0,0)', size = 256) {
+      const c = document.createElement('canvas');
+      c.width = c.height = size;
+      const ctx = c.getContext('2d');
+      const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+      g.addColorStop(0, inner); g.addColorStop(.18, mid); g.addColorStop(1, outer);
+      ctx.fillStyle = g; ctx.fillRect(0,0,size,size);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    const glowTexture = makeRadialTexture();
+    const softGlowTexture = makeRadialTexture('rgba(255,255,255,.75)', 'rgba(115,105,255,.22)');
+
+    function initThree() {
+      if (!canUseWebGL()) {
+        $('#webglError').classList.add('visible');
+        loadingScreen.classList.add('hidden');
+        return false;
+      }
+
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: !isSmallScreen, powerPreference: 'high-performance' });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, isSmallScreen ? 1.35 : 1.75));
+      renderer.setSize(innerWidth, innerHeight, false);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.05;
+      renderer.shadowMap.enabled = !isSmallScreen;
+      renderer.shadowMap.type = THREE.PCFShadowMap;
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x03050d);
+      scene.fog = new THREE.FogExp2(0x050815, .026);
+
+      camera = new THREE.PerspectiveCamera(46, innerWidth / innerHeight, .1, 180);
+      camera.position.set(12, 9, 14);
+
+      controls = new OrbitControls(camera, canvas);
+      controls.enableDamping = true;
+      controls.dampingFactor = .055;
+      controls.enablePan = false;
+      controls.minDistance = 7;
+      controls.maxDistance = 28;
+      controls.minPolarAngle = .18;
+      controls.maxPolarAngle = Math.PI - .18;
+      controls.rotateSpeed = isCoarsePointer ? .55 : .72;
+      controls.zoomSpeed = .8;
+      controls.autoRotate = !reducedMotion;
+      controls.autoRotateSpeed = .34;
+      controls.target.set(0, .25, 0);
+
+      const renderPass = new RenderPass(scene, camera);
+      bloomPass = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), isSmallScreen ? .72 : 1.03, .72, .26);
+      composer = new EffectComposer(renderer);
+      composer.addPass(renderPass);
+      composer.addPass(bloomPass);
+
+      worldGroup = new THREE.Group();
+      puzzleGroup = new THREE.Group();
+      beamGroup = new THREE.Group();
+      fxGroup = new THREE.Group();
+      backgroundGroup = new THREE.Group();
+      worldGroup.add(puzzleGroup, beamGroup, fxGroup);
+      scene.add(backgroundGroup, worldGroup);
+
+      raycaster = new THREE.Raycaster();
+      pointer = new THREE.Vector2();
+
+      setupLights();
+      setupBackground();
+      setupSelectionHalo();
+      setupEvents();
+      return true;
+    }
+
+    function setupLights() {
+      scene.add(new THREE.HemisphereLight(0x89dfff, 0x130c29, 1.15));
+      const keyLight = new THREE.DirectionalLight(0xc7f8ff, 2.1);
+      keyLight.position.set(8, 12, 10);
+      keyLight.castShadow = !isSmallScreen;
+      keyLight.shadow.mapSize.set(1024, 1024);
+      keyLight.shadow.camera.near = 1;
+      keyLight.shadow.camera.far = 40;
+      keyLight.shadow.camera.left = -11;
+      keyLight.shadow.camera.right = 11;
+      keyLight.shadow.camera.top = 11;
+      keyLight.shadow.camera.bottom = -11;
+      scene.add(keyLight);
+
+      const violet = new THREE.PointLight(0x8a56ff, 22, 34, 2);
+      violet.position.set(-8, 4, -7);
+      scene.add(violet);
+      const cyan = new THREE.PointLight(0x37eaff, 18, 30, 2);
+      cyan.position.set(9, -3, 7);
+      scene.add(cyan);
+    }
+
+    function setupBackground() {
+      const starCount = isSmallScreen ? 1000 : 2100;
+      const positions = new Float32Array(starCount * 3);
+      const colors = new Float32Array(starCount * 3);
+      const c1 = new THREE.Color(0x88eaff), c2 = new THREE.Color(0x9f78ff), c3 = new THREE.Color(0xffffff);
+      for (let i = 0; i < starCount; i++) {
+        const r = 24 + Math.random() * 58;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(THREE.MathUtils.randFloatSpread(2));
+        positions[i*3] = r * Math.sin(phi) * Math.cos(theta);
+        positions[i*3+1] = r * Math.cos(phi);
+        positions[i*3+2] = r * Math.sin(phi) * Math.sin(theta);
+        const c = Math.random() < .42 ? c1 : (Math.random() < .62 ? c2 : c3);
+        colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
+      }
+      const starGeo = new THREE.BufferGeometry();
+      starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      starGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      const starMat = new THREE.PointsMaterial({ size: .095, vertexColors: true, transparent: true, opacity: .74, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true });
+      const stars = new THREE.Points(starGeo, starMat);
+      backgroundGroup.add(stars);
+      backgroundGroup.userData.stars = stars;
+
+      const nebulaData = [
+        [-18, 7, -24, 22, 0x4d3a9c, .17],
+        [20, -9, -30, 30, 0x176886, .11],
+        [-5, -18, -32, 25, 0x783c78, .10]
+      ];
+      nebulaData.forEach(([x,y,z,s,color,opacity]) => {
+        const mat = new THREE.SpriteMaterial({ map: softGlowTexture, color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending });
+        const sprite = new THREE.Sprite(mat);
+        sprite.position.set(x,y,z); sprite.scale.set(s,s,s);
+        backgroundGroup.add(sprite);
+      });
+
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0x55d7ff, wireframe: true, transparent: true, opacity: .045, depthWrite: false });
+      for (let i = 0; i < 4; i++) {
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(11 + i * 2.7, .012, 4, 128), ringMat.clone());
+        ring.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+        ring.userData.speed = (i % 2 ? -1 : 1) * (.018 + i * .005);
+        backgroundGroup.add(ring);
+      }
+    }
+
+    function setupSelectionHalo() {
+      selectionHalo = new THREE.Group();
+      const m1 = new THREE.MeshBasicMaterial({ color: 0x8ffaff, transparent: true, opacity: .82, depthWrite: false, blending: THREE.AdditiveBlending });
+      const m2 = new THREE.MeshBasicMaterial({ color: 0xb793ff, transparent: true, opacity: .48, depthWrite: false, blending: THREE.AdditiveBlending });
+      const r1 = new THREE.Mesh(new THREE.TorusGeometry(.86, .018, 6, 72), m1);
+      const r2 = new THREE.Mesh(new THREE.TorusGeometry(1.02, .012, 6, 72), m2);
+      r2.rotation.x = Math.PI / 2;
+      selectionHalo.add(r1, r2);
+      selectionHalo.visible = false;
+      scene.add(selectionHalo);
+    }
+
+    function setupEvents() {
+      addEventListener('resize', onResize);
+      canvas.addEventListener('pointerdown', onPointerDown, { passive: true });
+      canvas.addEventListener('pointermove', onPointerMove, { passive: true });
+      canvas.addEventListener('pointerup', onPointerUp, { passive: true });
+      canvas.addEventListener('pointercancel', () => pointerDown = null, { passive: true });
+      canvas.addEventListener('contextmenu', e => e.preventDefault());
+      canvas.addEventListener('dblclick', e => {
+        const mirror = pickMirror(e.clientX, e.clientY);
+        if (mirror && started && !solved) {
+          selectMirror(mirror);
+          rotateSelected(1);
+        }
+      });
+
+      $('#startBtn').addEventListener('click', startGame);
+      $('#prevBtn').addEventListener('click', () => rotateSelected(-1));
+      $('#nextBtn').addEventListener('click', () => rotateSelected(1));
+      $('#undoBtn').addEventListener('click', undoMove);
+      $('#hintBtn').addEventListener('click', showHint);
+      $('#resetBtn').addEventListener('click', resetLevel);
+      $('#soundBtn').addEventListener('click', toggleSound);
+      $('#replayBtn').addEventListener('click', () => { winOverlay.classList.remove('visible'); resetLevel(); });
+      $('#nextLevelBtn').addEventListener('click', () => {
+        winOverlay.classList.remove('visible');
+        loadLevel(levelIndex < LEVELS.length - 1 ? levelIndex + 1 : 0);
+      });
+
+      addEventListener('keydown', e => {
+        if (e.repeat) return;
+        const tag = document.activeElement?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        const k = e.key.toLowerCase();
+        if (k === 'q' || e.key === 'ArrowLeft') { e.preventDefault(); rotateSelected(-1); }
+        else if (k === 'e' || e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); rotateSelected(1); }
+        else if (k === 'z' || (e.ctrlKey && k === 'z')) { e.preventDefault(); undoMove(); }
+        else if (k === 'h') showHint();
+        else if (k === 'r') resetLevel();
+        else if (k === 's') toggleSound();
+        else if (e.key === 'Escape') selectMirror(null);
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && started && !solved) {
+          levelStartTime = performance.now() - frozenElapsed;
+        } else if (document.hidden && started && !solved) {
+          frozenElapsed = performance.now() - levelStartTime;
+        }
+      });
+    }
+
+    function onResize() {
+      if (!renderer) return;
+      const w = innerWidth, h = innerHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setPixelRatio(Math.min(devicePixelRatio, w < 700 ? 1.35 : 1.75));
+      renderer.setSize(w, h, false);
+      composer.setSize(w, h);
+    }
+
+    function pointerToNdc(x, y) {
+      const rect = canvas.getBoundingClientRect();
+      pointer.x = ((x - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((y - rect.top) / rect.height) * 2 + 1;
+    }
+
+    function pickMirror(x, y) {
+      if (!raycaster || clickableMeshes.length === 0) return null;
+      pointerToNdc(x, y);
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObjects(clickableMeshes, false);
+      if (!hits.length) return null;
+      return hits[0].object.userData.mirrorObject || null;
+    }
+
+    function onPointerDown(e) {
+      pointerDown = { x: e.clientX, y: e.clientY, t: performance.now(), mirror: pickMirror(e.clientX, e.clientY) };
+    }
+
+    function onPointerMove(e) {
+      if (isCoarsePointer || !started || solved) return;
+      if (pointerDown && Math.hypot(e.clientX - pointerDown.x, e.clientY - pointerDown.y) > 4) return;
+      const hit = pickMirror(e.clientX, e.clientY);
+      if (hit !== hoveredMirror) {
+        if (hoveredMirror) setMirrorHover(hoveredMirror, false);
+        hoveredMirror = hit;
+        if (hoveredMirror) setMirrorHover(hoveredMirror, true);
+        canvas.style.cursor = hoveredMirror ? 'pointer' : 'grab';
+      }
+    }
+
+    function onPointerUp(e) {
+      if (!pointerDown || !started || solved) { pointerDown = null; return; }
+      const dist = Math.hypot(e.clientX - pointerDown.x, e.clientY - pointerDown.y);
+      const elapsed = performance.now() - pointerDown.t;
+      if (dist < 7 && elapsed < 650) {
+        const hit = pickMirror(e.clientX, e.clientY);
+        if (hit) {
+          if (selectedMirror === hit) rotateSelected(1);
+          else selectMirror(hit);
+        } else {
+          selectMirror(null);
+        }
+      }
+      pointerDown = null;
+    }
+
+    function setMirrorHover(mirror, value) {
+      if (!mirror?.userData?.paneMat) return;
+      mirror.userData.hovered = value;
+    }
+
+    function disposeObject(root) {
+      root.traverse(obj => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+          const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+          mats.forEach(m => m.dispose?.());
+        }
+      });
+    }
+
+    function clearGroup(group) {
+      while (group.children.length) {
+        const child = group.children.pop();
+        disposeObject(child);
+      }
+    }
+
+    function gridToWorld(pos) {
+      const [dx, dy, dz] = currentLevel.dims;
+      const spacing = currentLevel.spacing;
+      return new THREE.Vector3(
+        (pos[0] - (dx - 1) / 2) * spacing,
+        (pos[1] - (dy - 1) / 2) * spacing,
+        (pos[2] - (dz - 1) / 2) * spacing
+      );
+    }
+
+    function createGrid() {
+      const [dx, dy, dz] = currentLevel.dims;
+      const s = currentLevel.spacing;
+      const min = gridToWorld([0,0,0]);
+      const max = gridToWorld([dx-1,dy-1,dz-1]);
+      const pts = [];
+
+      for (let y = 0; y < dy; y++) for (let z = 0; z < dz; z++) {
+        const a = gridToWorld([0,y,z]), b = gridToWorld([dx-1,y,z]); pts.push(...a.toArray(), ...b.toArray());
+      }
+      for (let x = 0; x < dx; x++) for (let z = 0; z < dz; z++) {
+        const a = gridToWorld([x,0,z]), b = gridToWorld([x,dy-1,z]); pts.push(...a.toArray(), ...b.toArray());
+      }
+      for (let x = 0; x < dx; x++) for (let y = 0; y < dy; y++) {
+        const a = gridToWorld([x,y,0]), b = gridToWorld([x,y,dz-1]); pts.push(...a.toArray(), ...b.toArray());
+      }
+      const lineGeo = new THREE.BufferGeometry();
+      lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+      const lineMat = new THREE.LineBasicMaterial({ color: 0x79dfff, transparent: true, opacity: .085, depthWrite: false, blending: THREE.AdditiveBlending });
+      puzzleGroup.add(new THREE.LineSegments(lineGeo, lineMat));
+
+      const nodeGeo = new THREE.IcosahedronGeometry(.026, 0);
+      const nodeMat = new THREE.MeshBasicMaterial({ color: 0x9eefff, transparent: true, opacity: .24, depthWrite: false, blending: THREE.AdditiveBlending });
+      const nodes = new THREE.InstancedMesh(nodeGeo, nodeMat, dx * dy * dz);
+      const matrix = new THREE.Matrix4();
+      let idx = 0;
+      for (let x = 0; x < dx; x++) for (let y = 0; y < dy; y++) for (let z = 0; z < dz; z++) {
+        matrix.makeTranslation(...gridToWorld([x,y,z]).toArray());
+        nodes.setMatrixAt(idx++, matrix);
+      }
+      nodes.instanceMatrix.needsUpdate = true;
+      puzzleGroup.add(nodes);
+
+      const boxSize = new THREE.Vector3(max.x-min.x+s*.82, max.y-min.y+s*.82, max.z-min.z+s*.82);
+      const chamberMat = new THREE.MeshPhysicalMaterial({
+        color: 0x0e2135, transparent: true, opacity: .045, roughness: .26, metalness: .15,
+        transmission: .28, thickness: .2, side: THREE.BackSide, depthWrite: false
+      });
+      const chamber = new THREE.Mesh(new THREE.BoxGeometry(boxSize.x, boxSize.y, boxSize.z), chamberMat);
+      chamber.position.copy(min).add(max).multiplyScalar(.5);
+      puzzleGroup.add(chamber);
+
+      const edgeGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(boxSize.x, boxSize.y, boxSize.z));
+      const edgeMat = new THREE.LineBasicMaterial({ color: 0x6eeeff, transparent: true, opacity: .22, blending: THREE.AdditiveBlending });
+      const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+      edges.position.copy(chamber.position);
+      puzzleGroup.add(edges);
+
+      const baseY = min.y - s * .62;
+      const platform = new THREE.Mesh(
+        new THREE.CylinderGeometry(Math.max(boxSize.x, boxSize.z) * .68, Math.max(boxSize.x, boxSize.z) * .76, .11, 6, 1, false),
+        new THREE.MeshStandardMaterial({ color: 0x09111f, metalness: .82, roughness: .24, emissive: 0x09213a, emissiveIntensity: .45 })
+      );
+      platform.position.set(0, baseY, 0);
+      platform.receiveShadow = true;
+      puzzleGroup.add(platform);
+      const rim = new THREE.Mesh(
+        new THREE.TorusGeometry(Math.max(boxSize.x, boxSize.z) * .70, .025, 5, 96),
+        new THREE.MeshBasicMaterial({ color: 0x4cecff, transparent: true, opacity: .42, blending: THREE.AdditiveBlending })
+      );
+      rim.rotation.x = Math.PI / 2;
+      rim.position.y = baseY + .07;
+      puzzleGroup.add(rim);
+    }
+
+    function mirrorQuaternion(stateIndex) {
+      const normal = vec(MIRROR_STATES[stateIndex].normal).normalize();
+      return new THREE.Quaternion().setFromUnitVectors(Z_AXIS, normal);
+    }
+
+    function createMirror(data, index) {
+      const g = new THREE.Group();
+      g.position.copy(gridToWorld(data.pos));
+      g.userData = {
+        type: 'mirror', index, id: data.id, state: data.state, initialState: data.initialState,
+        solutionState: data.solutionState, essential: data.essential, basePosition: g.position.clone(),
+        phase: Math.random() * Math.PI * 2, targetQuaternion: mirrorQuaternion(data.state), hovered: false,
+        hintPulse: 0
+      };
+      g.quaternion.copy(g.userData.targetQuaternion);
+
+      const paneMat = new THREE.MeshPhysicalMaterial({
+        color: MIRROR_STATES[data.state].color,
+        emissive: MIRROR_STATES[data.state].color,
+        emissiveIntensity: .42,
+        metalness: .58,
+        roughness: .12,
+        transmission: .36,
+        thickness: .22,
+        transparent: true,
+        opacity: .76,
+        side: THREE.DoubleSide,
+        depthWrite: true
+      });
+      const pane = new THREE.Mesh(new THREE.CircleGeometry(.56, 6), paneMat);
+      pane.castShadow = !isSmallScreen;
+      pane.userData.mirrorObject = g;
+      clickableMeshes.push(pane);
+      g.add(pane);
+
+      const backPane = new THREE.Mesh(
+        new THREE.CircleGeometry(.50, 6),
+        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .08, side: THREE.BackSide, blending: THREE.AdditiveBlending })
+      );
+      backPane.position.z = -.035;
+      g.add(backPane);
+
+      const frameMat = new THREE.MeshStandardMaterial({
+        color: 0x182c3b, metalness: .92, roughness: .16,
+        emissive: MIRROR_STATES[data.state].color, emissiveIntensity: .24
+      });
+      const frame = new THREE.Mesh(new THREE.TorusGeometry(.61, .055, 6, 6), frameMat);
+      frame.userData.mirrorObject = g;
+      clickableMeshes.push(frame);
+      g.add(frame);
+
+      const innerRing = new THREE.Mesh(
+        new THREE.TorusGeometry(.41, .012, 5, 6),
+        new THREE.MeshBasicMaterial({ color: MIRROR_STATES[data.state].color, transparent: true, opacity: .82, blending: THREE.AdditiveBlending })
+      );
+      g.add(innerRing);
+
+      const axisGeo = new THREE.CylinderGeometry(.018, .018, 1.55, 6);
+      const axisMat = new THREE.MeshBasicMaterial({ color: MIRROR_STATES[data.state].color, transparent: true, opacity: .56, blending: THREE.AdditiveBlending });
+      const axis = new THREE.Mesh(axisGeo, axisMat);
+      axis.rotation.z = Math.PI / 2;
+      axis.position.z = -.055;
+      g.add(axis);
+
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: glowTexture, color: MIRROR_STATES[data.state].color, transparent: true, opacity: .16,
+        depthWrite: false, blending: THREE.AdditiveBlending
+      }));
+      glow.scale.set(2.25, 2.25, 1);
+      glow.position.z = -.08;
+      g.add(glow);
+
+      const idRing = new THREE.Mesh(
+        new THREE.TorusGeometry(.73, .009, 4, 48),
+        new THREE.MeshBasicMaterial({ color: data.essential ? 0x99efff : 0x8e79b8, transparent: true, opacity: data.essential ? .23 : .12, blending: THREE.AdditiveBlending })
+      );
+      idRing.rotation.x = Math.PI / 2;
+      idRing.userData.spin = data.essential ? .34 : -.22;
+      g.add(idRing);
+
+      g.userData.paneMat = paneMat;
+      g.userData.frameMat = frameMat;
+      g.userData.axisMat = axisMat;
+      g.userData.innerMat = innerRing.material;
+      g.userData.glowMat = glow.material;
+      g.userData.idRing = idRing;
+      puzzleGroup.add(g);
+      return g;
+    }
+
+    function applyMirrorStateVisual(mirror, immediate = false) {
+      const state = mirror.userData.state;
+      const def = MIRROR_STATES[state];
+      mirror.userData.targetQuaternion.copy(mirrorQuaternion(state));
+      const color = new THREE.Color(def.color);
+      mirror.userData.paneMat.color.copy(color);
+      mirror.userData.paneMat.emissive.copy(color);
+      mirror.userData.frameMat.emissive.copy(color);
+      mirror.userData.axisMat.color.copy(color);
+      mirror.userData.innerMat.color.copy(color);
+      mirror.userData.glowMat.color.copy(color);
+      if (immediate) mirror.quaternion.copy(mirror.userData.targetQuaternion);
+      if (selectedMirror === mirror) updateSelectionCard();
+    }
+
+    function createEmitter() {
+      const g = new THREE.Group();
+      g.position.copy(gridToWorld(currentLevel.start));
+      const direction = currentLevel.startDir.clone();
+      g.quaternion.setFromUnitVectors(Z_AXIS, direction);
+
+      const body = new THREE.Mesh(
+        new THREE.CylinderGeometry(.28, .36, .78, 12, 1),
+        new THREE.MeshStandardMaterial({ color: 0x172c3a, metalness: .9, roughness: .19, emissive: 0x0a5261, emissiveIntensity: .48 })
+      );
+      body.rotation.x = Math.PI / 2;
+      body.position.z = -.35;
+      body.castShadow = !isSmallScreen;
+      g.add(body);
+
+      const barrel = new THREE.Mesh(
+        new THREE.CylinderGeometry(.15, .20, .54, 12),
+        new THREE.MeshStandardMaterial({ color: 0x294a56, metalness: .82, roughness: .15, emissive: 0x2feeff, emissiveIntensity: .7 })
+      );
+      barrel.rotation.x = Math.PI / 2;
+      barrel.position.z = .24;
+      g.add(barrel);
+
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0x7cfbff, transparent: true, opacity: .9, blending: THREE.AdditiveBlending });
+      for (let i = 0; i < 2; i++) {
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(.31 + i*.12, .018, 5, 48), ringMat.clone());
+        ring.position.z = .54 + i*.05;
+        ring.userData.spin = i ? -.55 : .72;
+        g.add(ring);
+      }
+      const flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture, color: 0x7cffff, transparent: true, opacity: .72, depthWrite: false, blending: THREE.AdditiveBlending }));
+      flare.scale.set(1.55,1.55,1); flare.position.z = .62;
+      g.add(flare);
+      g.userData = { type: 'emitter', phase: Math.random()*6 };
+      puzzleGroup.add(g);
+      emitterObject = g;
+    }
+
+    function createReceiver() {
+      const g = new THREE.Group();
+      g.position.copy(gridToWorld(currentLevel.receiver));
+
+      const coreMat = new THREE.MeshPhysicalMaterial({
+        color: 0x4e406f, emissive: 0x623d99, emissiveIntensity: .42,
+        roughness: .13, metalness: .42, transmission: .33, thickness: .8, transparent: true, opacity: .88
+      });
+      const core = new THREE.Mesh(new THREE.DodecahedronGeometry(.44, 1), coreMat);
+      core.castShadow = !isSmallScreen;
+      g.add(core);
+
+      const cageMat = new THREE.MeshBasicMaterial({ color: 0xb99bff, wireframe: true, transparent: true, opacity: .46, blending: THREE.AdditiveBlending });
+      const cage = new THREE.Mesh(new THREE.IcosahedronGeometry(.61, 1), cageMat);
+      g.add(cage);
+
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0x8d71ff, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false });
+      for (let i = 0; i < 3; i++) {
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(.76 + i*.1, .018, 6, 64), ringMat.clone());
+        ring.rotation.set(i*Math.PI/3, i*Math.PI/4, i*Math.PI/5);
+        ring.userData.spin = (i%2 ? -1 : 1) * (.32 + i*.12);
+        g.add(ring);
+      }
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture, color: 0x9c7cff, transparent: true, opacity: .24, depthWrite: false, blending: THREE.AdditiveBlending }));
+      glow.scale.set(2.7,2.7,1);
+      g.add(glow);
+
+      g.userData = { type: 'receiver', active: false, coreMat, cageMat, glowMat: glow.material, basePosition: g.position.clone(), phase: Math.random()*6 };
+      puzzleGroup.add(g);
+      receiverObject = g;
+    }
+
+    function createCrystal(pos, index) {
+      const g = new THREE.Group();
+      g.position.copy(gridToWorld(pos));
+      const innerMat = new THREE.MeshStandardMaterial({ color: 0x315561, emissive: 0x173c47, emissiveIntensity: .38, metalness: .28, roughness: .19 });
+      const inner = new THREE.Mesh(new THREE.OctahedronGeometry(.22, 0), innerMat);
+      inner.rotation.z = Math.PI / 4;
+      g.add(inner);
+      const outerMat = new THREE.MeshBasicMaterial({ color: 0x5f98a6, wireframe: true, transparent: true, opacity: .34, blending: THREE.AdditiveBlending });
+      const outer = new THREE.Mesh(new THREE.OctahedronGeometry(.34, 0), outerMat);
+      g.add(outer);
+      const orbit = new THREE.Mesh(
+        new THREE.TorusGeometry(.42, .012, 4, 40),
+        new THREE.MeshBasicMaterial({ color: 0x6eeeff, transparent: true, opacity: .14, blending: THREE.AdditiveBlending })
+      );
+      orbit.rotation.x = Math.PI / 2;
+      g.add(orbit);
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture, color: 0x7ff9ff, transparent: true, opacity: .04, depthWrite: false, blending: THREE.AdditiveBlending }));
+      glow.scale.set(1.65,1.65,1);
+      g.add(glow);
+      g.userData = {
+        type: 'crystal', index, active: false, activation: 0, innerMat, outerMat,
+        orbit, glowMat: glow.material, basePosition: g.position.clone(), phase: Math.random()*Math.PI*2
+      };
+      puzzleGroup.add(g);
+      crystalObjects.set(key(pos), g);
+    }
+
+    function createBlocker(pos, index) {
+      const g = new THREE.Group();
+      g.position.copy(gridToWorld(pos));
+      const rock = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(.48, 1),
+        new THREE.MeshStandardMaterial({ color: 0x080a13, metalness: .68, roughness: .32, emissive: 0x10091c, emissiveIntensity: .7, flatShading: true })
+      );
+      rock.scale.set(1, .86, 1.12);
+      rock.rotation.set(Math.random(),Math.random(),Math.random());
+      rock.castShadow = !isSmallScreen;
+      g.add(rock);
+      const cracks = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(.492, 1),
+        new THREE.MeshBasicMaterial({ color: 0x6c398f, wireframe: true, transparent: true, opacity: .16, blending: THREE.AdditiveBlending })
+      );
+      cracks.rotation.copy(rock.rotation);
+      cracks.scale.copy(rock.scale);
+      g.add(cracks);
+      g.userData = { type: 'blocker', index, basePosition: g.position.clone(), phase: Math.random()*6 };
+      puzzleGroup.add(g);
+      blockerObjects.push(g);
+    }
+
+    function frameCameraForLevel(immediate = false) {
+      const [dx, dy, dz] = currentLevel.dims;
+      const maxDim = Math.max(dx, dy, dz) * currentLevel.spacing;
+      const dist = Math.max(10, maxDim * (isSmallScreen ? 1.45 : 1.22));
+      const targetPos = new THREE.Vector3(dist*.82, dist*.62, dist);
+      const targetLook = new THREE.Vector3(0, 0, 0);
+      controls.minDistance = Math.max(6.5, maxDim * .72);
+      controls.maxDistance = maxDim * 2.7;
+      if (immediate || reducedMotion) {
+        camera.position.copy(targetPos);
+        controls.target.copy(targetLook);
+        controls.update();
+      } else {
+        cameraTween = {
+          start: performance.now(), duration: 820,
+          fromPos: camera.position.clone(), toPos: targetPos,
+          fromTarget: controls.target.clone(), toTarget: targetLook
+        };
+      }
+    }
+
+    function loadLevel(index, immediateCamera = false) {
+      levelLoadToken++;
+      levelIndex = THREE.MathUtils.clamp(index, 0, LEVELS.length - 1);
+      currentLevel = structuredClone ? structuredClone(LEVELS[levelIndex]) : JSON.parse(JSON.stringify(LEVELS[levelIndex]));
+      currentLevel.startDir = LEVELS[levelIndex].startDir.clone();
+      currentLevel.spacing = currentLevel.dims[0] >= 7 ? 1.28 : currentLevel.dims[0] >= 6 ? 1.38 : 1.48;
+
+      selectedMirror = null;
+      hoveredMirror = null;
+      selectionHalo.visible = false;
+      $('#selectionCard').classList.remove('visible');
+      clickableMeshes = [];
+      mirrorObjects = [];
+      crystalObjects.clear();
+      blockerObjects = [];
+      clearGroup(puzzleGroup);
+      clearBeam();
+      clearGroup(fxGroup);
+
+      moveCount = 0;
+      undoStack = [];
+      solved = false;
+      frozenElapsed = 0;
+      levelStartTime = performance.now();
+
+      createGrid();
+      currentLevel.mirrors.forEach((m, i) => mirrorObjects.push(createMirror(m, i)));
+      currentLevel.crystals.forEach((p, i) => createCrystal(p, i));
+      currentLevel.blockers.forEach((p, i) => createBlocker(p, i));
+      createEmitter();
+      createReceiver();
+      simulateBeam(false);
+      frameCameraForLevel(immediateCamera);
+      updateHud();
+      updateLevelRail();
+      controls.autoRotate = !started && !reducedMotion;
+      showToast(`${String(levelIndex + 1).padStart(2,'0')} // ${currentLevel.name}`, '', 1500);
+    }
+
+    function selectMirror(mirror) {
+      selectedMirror = mirror;
+      if (!mirror) {
+        selectionHalo.visible = false;
+        $('#selectionCard').classList.remove('visible');
+        setControlsEnabled();
+        return;
+      }
+      selectionHalo.visible = true;
+      selectionHalo.position.copy(mirror.position);
+      updateSelectionCard();
+      $('#selectionCard').classList.add('visible');
+      sound('select');
+      setControlsEnabled();
+    }
+
+    function updateSelectionCard() {
+      if (!selectedMirror) return;
+      const idx = selectedMirror.userData.index + 1;
+      $('#selectionName').textContent = `PRISM ${String(idx).padStart(2,'0')}`;
+      $('#axisChip').textContent = MIRROR_STATES[selectedMirror.userData.state].name;
+    }
+
+    function rotateSelected(delta) {
+      if (!selectedMirror || solved || !started) {
+        if (started && !solved) showToast('먼저 프리즘을 선택하세요.', 'warn', 1300);
+        return;
+      }
+      const mirror = selectedMirror;
+      const prev = mirror.userData.state;
+      const next = clampState(prev + delta);
+      undoStack.push({ index: mirror.userData.index, prev, next });
+      mirror.userData.state = next;
+      applyMirrorStateVisual(mirror);
+      moveCount++;
+      sound('rotate');
+      simulateBeam(true);
+      updateHud();
+    }
+
+    function undoMove() {
+      if (!undoStack.length || solved || !started) return;
+      const action = undoStack.pop();
+      const mirror = mirrorObjects[action.index];
+      mirror.userData.state = action.prev;
+      applyMirrorStateVisual(mirror);
+      moveCount = Math.max(0, moveCount - 1);
+      selectMirror(mirror);
+      simulateBeam(false);
+      updateHud();
+      sound('undo');
+    }
+
+    function resetLevel() {
+      if (!started) return;
+      winOverlay.classList.remove('visible');
+      solved = false;
+      mirrorObjects.forEach(m => {
+        m.userData.state = m.userData.initialState;
+        applyMirrorStateVisual(m, true);
+      });
+      moveCount = 0;
+      undoStack = [];
+      frozenElapsed = 0;
+      levelStartTime = performance.now();
+      selectMirror(null);
+      simulateBeam(false);
+      updateHud();
+      sound('reset');
+      showToast('초기 위상으로 복원했습니다.', '', 1300);
+    }
+
+    function showHint() {
+      if (solved || !started) return;
+      const wrong = mirrorObjects.filter(m => m.userData.solutionState !== null && m.userData.state !== m.userData.solutionState);
+      if (!wrong.length) {
+        showToast('필수 프리즘은 모두 맞습니다. 광선 경로를 확인하세요.', '', 1800);
+        return;
+      }
+      wrong.sort((a,b) => a.userData.index - b.userData.index);
+      const target = wrong[Math.floor(Math.random() * wrong.length)];
+      hintMirror = target;
+      hintUntil = performance.now() + 3400;
+      target.userData.hintPulse = 1;
+      selectMirror(target);
+      const wanted = MIRROR_STATES[target.userData.solutionState].name;
+      showToast(`신호 감지: PRISM ${String(target.userData.index + 1).padStart(2,'0')} → ${wanted}`, '', 3200);
+      sound('hint');
+    }
+
+    function inBounds(p) {
+      const [dx,dy,dz] = currentLevel.dims;
+      return p.x >= 0 && p.x < dx && p.y >= 0 && p.y < dy && p.z >= 0 && p.z < dz;
+    }
+
+    function directionKey(d) { return `${d.x}${d.y}${d.z}`; }
+
+    function clearBeam() {
+      clearGroup(beamGroup);
+      beamMaterials = [];
+      beamPath = [];
+      beamLengths = [];
+      beamTotalLength = 0;
+      beamParticlePoints = null;
+    }
+
+    function createCylinderBetween(a, b, radius, material, radial = 8) {
+      const dir = tmpV1.copy(b).sub(a);
+      const len = dir.length();
+      const geo = new THREE.CylinderGeometry(radius, radius, len, radial, 1, true);
+      const mesh = new THREE.Mesh(geo, material);
+      mesh.position.copy(a).add(b).multiplyScalar(.5);
+      mesh.quaternion.setFromUnitVectors(Y_AXIS, dir.normalize());
+      return mesh;
+    }
+
+    function compressPath(points) {
+      if (points.length <= 2) return points.map(p => p.clone());
+      const out = [points[0].clone()];
+      for (let i = 1; i < points.length - 1; i++) {
+        const a = tmpV1.copy(points[i]).sub(points[i-1]).normalize();
+        const b = tmpV2.copy(points[i+1]).sub(points[i]).normalize();
+        if (a.dot(b) < .999) out.push(points[i].clone());
+      }
+      out.push(points[points.length-1].clone());
+      return out;
+    }
+
+    function buildBeamVisual(points, success = false, loop = false) {
+      clearBeam();
+      beamPath = compressPath(points);
+      const beamColor = success ? 0xd9ffff : loop ? 0xff6d9d : 0x5cf5ff;
+      for (let i = 0; i < beamPath.length - 1; i++) {
+        const coreMat = new THREE.MeshBasicMaterial({ color: beamColor, transparent: true, opacity: .96, depthWrite: false, blending: THREE.AdditiveBlending });
+        const midMat = new THREE.MeshBasicMaterial({ color: beamColor, transparent: true, opacity: .22, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+        const glowMat = new THREE.MeshBasicMaterial({ color: beamColor, transparent: true, opacity: .055, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+        beamMaterials.push(coreMat, midMat, glowMat);
+        beamGroup.add(createCylinderBetween(beamPath[i], beamPath[i+1], .026, coreMat, 6));
+        beamGroup.add(createCylinderBetween(beamPath[i], beamPath[i+1], .09, midMat, 8));
+        beamGroup.add(createCylinderBetween(beamPath[i], beamPath[i+1], .19, glowMat, 8));
+        if (i > 0) {
+          const joint = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture, color: beamColor, transparent: true, opacity: .56, depthWrite: false, blending: THREE.AdditiveBlending }));
+          joint.position.copy(beamPath[i]); joint.scale.set(.72,.72,1);
+          beamGroup.add(joint);
+        }
+      }
+
+      const end = beamPath[beamPath.length - 1];
+      if (end) {
+        const flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture, color: beamColor, transparent: true, opacity: loop ? .85 : .48, depthWrite: false, blending: THREE.AdditiveBlending }));
+        flare.position.copy(end); flare.scale.set(loop ? 1.15 : .76, loop ? 1.15 : .76, 1);
+        beamGroup.add(flare);
+      }
+
+      beamLengths = [0];
+      beamTotalLength = 0;
+      for (let i = 1; i < beamPath.length; i++) {
+        beamTotalLength += beamPath[i].distanceTo(beamPath[i-1]);
+        beamLengths.push(beamTotalLength);
+      }
+      if (beamTotalLength > 0) createBeamParticles(beamColor);
+    }
+
+    function createBeamParticles(color) {
+      const count = isSmallScreen ? 30 : 64;
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+      const mat = new THREE.PointsMaterial({ color, size: .095, map: glowTexture, transparent: true, opacity: .9, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true });
+      beamParticlePoints = new THREE.Points(geo, mat);
+      beamParticlePoints.userData.offsets = Array.from({length: count}, () => Math.random());
+      beamGroup.add(beamParticlePoints);
+    }
+
+    function positionOnBeam(distance, target) {
+      if (!beamPath.length || beamTotalLength <= 0) return target.set(0,0,0);
+      const d = ((distance % beamTotalLength) + beamTotalLength) % beamTotalLength;
+      let segment = 1;
+      while (segment < beamLengths.length && beamLengths[segment] < d) segment++;
+      segment = Math.min(segment, beamPath.length - 1);
+      const prevLen = beamLengths[segment - 1];
+      const segLen = Math.max(.0001, beamLengths[segment] - prevLen);
+      return target.copy(beamPath[segment - 1]).lerp(beamPath[segment], (d - prevLen) / segLen);
+    }
+
+    function simulateBeam(playShardSounds = false) {
+      const mirrorMap = new Map(mirrorObjects.map(m => [key(m.userData.gridPos || currentLevel.mirrors[m.userData.index].pos), m]));
+      const crystalKeys = new Set(currentLevel.crystals.map(key));
+      const blockerKeys = new Set(currentLevel.blockers.map(key));
+      const receiverKey = key(currentLevel.receiver);
+      const active = new Set();
+      const visited = new Set();
+      const gridPoints = [vec(currentLevel.start)];
+      let current = vec(currentLevel.start);
+      let dir = currentLevel.startDir.clone();
+      let hitReceiver = false;
+      let loop = false;
+      let escaped = false;
+
+      for (let step = 0; step < 240; step++) {
+        const next = current.clone().add(dir);
+        gridPoints.push(next.clone());
+        if (!inBounds(next)) { escaped = true; break; }
+        const k = key(next);
+        if (crystalKeys.has(k)) active.add(k);
+        if (blockerKeys.has(k)) break;
+        if (k === receiverKey) { hitReceiver = true; break; }
+        const mirror = mirrorMap.get(k);
+        if (mirror) dir = reflectedDirection(dir, mirror.userData.state);
+        const stateKey = `${k}|${directionKey(dir)}`;
+        if (visited.has(stateKey)) { loop = true; break; }
+        visited.add(stateKey);
+        current = next;
+      }
+
+      const priorActive = new Set([...crystalObjects].filter(([,o]) => o.userData.active).map(([k]) => k));
+      crystalObjects.forEach((obj, k) => {
+        const nowActive = active.has(k);
+        obj.userData.active = nowActive;
+        if (playShardSounds && nowActive && !priorActive.has(k)) sound('shard');
+      });
+
+      const allShards = active.size === currentLevel.crystals.length;
+      const success = hitReceiver && allShards;
+      receiverObject.userData.active = hitReceiver;
+      $('#shardValue').textContent = `${active.size} / ${currentLevel.crystals.length}`;
+
+      const worldPoints = gridPoints.map(p => {
+        if (inBounds(p)) return gridToWorld([p.x,p.y,p.z]);
+        const clamped = p.clone();
+        const [dx,dy,dz] = currentLevel.dims;
+        clamped.set(THREE.MathUtils.clamp(clamped.x, -.45, dx-.55), THREE.MathUtils.clamp(clamped.y, -.45, dy-.55), THREE.MathUtils.clamp(clamped.z, -.45, dz-.55));
+        return gridToWorld([clamped.x,clamped.y,clamped.z]);
+      });
+      buildBeamVisual(worldPoints, success, loop);
+
+      if (loop && playShardSounds) showToast('위상 루프가 발생했습니다.', 'warn', 1500);
+      else if (hitReceiver && !allShards && playShardSounds) showToast('코어에 닿았지만 기억 파편이 남아 있습니다.', 'warn', 1900);
+      else if (escaped && playShardSounds && active.size === 0) showToast('광선이 차원 경계를 이탈했습니다.', 'warn', 1400);
+
+      if (success && !solved) triggerWin();
+    }
+
+    function createBurst(position) {
+      clearGroup(fxGroup);
+      const count = isSmallScreen ? 160 : 320;
+      const positions = new Float32Array(count * 3);
+      const velocities = [];
+      const colors = new Float32Array(count * 3);
+      const c1 = new THREE.Color(0x78fbff), c2 = new THREE.Color(0xb793ff), c3 = new THREE.Color(0xffd66b);
+      for (let i = 0; i < count; i++) {
+        positions[i*3] = position.x; positions[i*3+1] = position.y; positions[i*3+2] = position.z;
+        const v = new THREE.Vector3().randomDirection().multiplyScalar(.7 + Math.random()*2.7);
+        velocities.push(v);
+        const c = i%3===0 ? c1 : (i%3===1 ? c2 : c3);
+        colors[i*3] = c.r; colors[i*3+1] = c.g; colors[i*3+2] = c.b;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+      geo.setAttribute('color', new THREE.BufferAttribute(colors,3));
+      const mat = new THREE.PointsMaterial({ size: .12, map: glowTexture, vertexColors: true, transparent: true, opacity: 1, depthWrite: false, blending: THREE.AdditiveBlending });
+      burstPoints = new THREE.Points(geo, mat);
+      burstPoints.userData = { velocities, age: 0 };
+      fxGroup.add(burstPoints);
+    }
+
+    function triggerWin() {
+      solved = true;
+      frozenElapsed = performance.now() - levelStartTime;
+      selectMirror(null);
+      controls.autoRotate = !reducedMotion;
+      save.completed[levelIndex] = true;
+      save.unlocked = Math.max(save.unlocked, Math.min(LEVELS.length, levelIndex + 2));
+      const oldBestMoves = save.bestMoves[levelIndex];
+      const oldBestTime = save.bestTimes[levelIndex];
+      if (!Number.isFinite(oldBestMoves) || moveCount < oldBestMoves) save.bestMoves[levelIndex] = moveCount;
+      if (!Number.isFinite(oldBestTime) || frozenElapsed < oldBestTime) save.bestTimes[levelIndex] = frozenElapsed;
+      saveProgress();
+      updateHud();
+      updateLevelRail();
+      createBurst(receiverObject.position);
+      sound('win');
+
+      const isLast = levelIndex === LEVELS.length - 1;
+      $('#winTitle').textContent = isLast ? '아카이브 완전 복구' : '코어 동기화 완료';
+      $('#winText').textContent = isLast ? '모든 차원의 빛이 하나의 기억으로 결합되었습니다.' : `${currentLevel.name} 섹터의 빛이 안정화되었습니다.`;
+      $('#resultMoves').textContent = String(moveCount).padStart(2,'0');
+      $('#resultTime').textContent = formatTime(frozenElapsed);
+      $('#resultBest').textContent = String(save.bestMoves[levelIndex]).padStart(2,'0');
+      $('#nextLevelBtn').innerHTML = isLast ? '첫 섹터로 <span>↺</span>' : '다음 섹터 <span>→</span>';
+      setTimeout(() => winOverlay.classList.add('visible'), reducedMotion ? 80 : 950);
+    }
+
+    function startGame() {
+      initAudio();
+      introOverlay.classList.remove('visible');
+      started = true;
+      solved = false;
+      frozenElapsed = 0;
+      levelStartTime = performance.now();
+      controls.autoRotate = false;
+      updateHud();
+      showToast('프리즘을 선택해 광로를 재구성하세요.', '', 2200);
+      sound('ui');
+    }
+
+    function animate(timestamp) {
+      requestAnimationFrame(animate);
+      timer.update(timestamp);
+      const dt = Math.min(timer.getDelta(), .05);
+      const t = performance.now() * .001;
+
+      if (cameraTween) {
+        const p = Math.min(1, (performance.now() - cameraTween.start) / cameraTween.duration);
+        const e = 1 - Math.pow(1 - p, 3);
+        camera.position.lerpVectors(cameraTween.fromPos, cameraTween.toPos, e);
+        controls.target.lerpVectors(cameraTween.fromTarget, cameraTween.toTarget, e);
+        if (p >= 1) cameraTween = null;
+      }
+      controls.update();
+
+      if (backgroundGroup.userData.stars) {
+        backgroundGroup.userData.stars.rotation.y += dt * .0035;
+        backgroundGroup.userData.stars.rotation.x += dt * .0008;
+      }
+      backgroundGroup.children.forEach(obj => {
+        if (obj.userData.speed) {
+          obj.rotation.x += dt * obj.userData.speed;
+          obj.rotation.z -= dt * obj.userData.speed * .55;
+        }
+      });
+
+      mirrorObjects.forEach(m => {
+        m.quaternion.slerp(m.userData.targetQuaternion, Math.min(1, dt * 10.5));
+        const bob = Math.sin(t * 1.28 + m.userData.phase) * .045;
+        m.position.copy(m.userData.basePosition).addScaledVector(new THREE.Vector3(0,1,0), bob);
+        const selected = m === selectedMirror;
+        const hovered = m.userData.hovered;
+        const hinting = m === hintMirror && performance.now() < hintUntil;
+        const pulse = hinting ? .5 + .5*Math.sin(t*11) : 0;
+        const targetEmissive = .42 + (selected ? .42 : 0) + (hovered ? .24 : 0) + pulse * 1.3;
+        m.userData.paneMat.emissiveIntensity = THREE.MathUtils.lerp(m.userData.paneMat.emissiveIntensity, targetEmissive, .12);
+        m.userData.glowMat.opacity = THREE.MathUtils.lerp(m.userData.glowMat.opacity, .14 + (selected?.17:0) + (hovered?.08:0) + pulse*.38, .14);
+        m.userData.idRing.rotation.z += dt * m.userData.idRing.userData.spin;
+      });
+      if (performance.now() >= hintUntil) hintMirror = null;
+
+      if (selectionHalo.visible && selectedMirror) {
+        selectionHalo.position.lerp(selectedMirror.position, .3);
+        selectionHalo.rotation.x += dt * .7;
+        selectionHalo.rotation.y -= dt * .44;
+        const s = 1 + Math.sin(t*4.2)*.035;
+        selectionHalo.scale.setScalar(s);
+      }
+
+      crystalObjects.forEach(c => {
+        c.userData.activation = THREE.MathUtils.lerp(c.userData.activation, c.userData.active ? 1 : 0, .10);
+        const a = c.userData.activation;
+        c.position.copy(c.userData.basePosition);
+        c.position.y += Math.sin(t*1.8 + c.userData.phase)*.055;
+        c.rotation.y += dt * (.45 + a*.7);
+        c.rotation.x += dt * .16;
+        c.userData.innerMat.color.lerp(new THREE.Color(a > .5 ? 0xbffcff : 0x315561), .1);
+        c.userData.innerMat.emissive.lerp(new THREE.Color(a > .5 ? 0x42e9ff : 0x173c47), .1);
+        c.userData.innerMat.emissiveIntensity = .38 + a*2.1 + Math.sin(t*5+c.userData.phase)*a*.24;
+        c.userData.outerMat.color.lerp(new THREE.Color(a > .5 ? 0xd8ffff : 0x5f98a6), .1);
+        c.userData.outerMat.opacity = .28 + a*.55;
+        c.userData.glowMat.opacity = .035 + a*.55;
+        c.userData.orbit.rotation.z += dt * (.32 + a*.76);
+        c.scale.setScalar(.92 + a*.25 + Math.sin(t*4+c.userData.phase)*a*.035);
+      });
+
+      if (receiverObject) {
+        const a = receiverObject.userData.active ? 1 : 0;
+        receiverObject.position.copy(receiverObject.userData.basePosition);
+        receiverObject.position.y += Math.sin(t*1.35 + receiverObject.userData.phase)*.06;
+        receiverObject.rotation.y += dt * (.18 + a*.46);
+        receiverObject.children.forEach((child, i) => {
+          if (child.userData.spin) {
+            child.rotation.x += dt * child.userData.spin;
+            child.rotation.z -= dt * child.userData.spin * .7;
+          }
+        });
+        receiverObject.userData.coreMat.emissiveIntensity = THREE.MathUtils.lerp(receiverObject.userData.coreMat.emissiveIntensity, .42 + a*2.2, .08);
+        receiverObject.userData.glowMat.opacity = THREE.MathUtils.lerp(receiverObject.userData.glowMat.opacity, .22 + a*.7, .08);
+      }
+
+      if (emitterObject) {
+        emitterObject.children.forEach(child => { if (child.userData.spin) child.rotation.z += dt * child.userData.spin; });
+      }
+      blockerObjects.forEach(b => {
+        b.rotation.y += dt*.06;
+        b.position.y = b.userData.basePosition.y + Math.sin(t*.7+b.userData.phase)*.025;
+      });
+
+      if (beamMaterials.length) {
+        const pulse = .78 + Math.sin(t*12)*.14;
+        for (let i = 0; i < beamMaterials.length; i += 3) {
+          beamMaterials[i].opacity = .84 + pulse*.12;
+          beamMaterials[i+1].opacity = .16 + pulse*.09;
+          beamMaterials[i+2].opacity = .035 + pulse*.028;
+        }
+      }
+      if (beamParticlePoints && beamTotalLength > 0) {
+        const attr = beamParticlePoints.geometry.attributes.position;
+        beamParticlePoints.userData.offsets.forEach((offset, i) => {
+          const pos = positionOnBeam((offset + t*.55) * beamTotalLength, tmpV3);
+          attr.setXYZ(i, pos.x, pos.y, pos.z);
+        });
+        attr.needsUpdate = true;
+      }
+
+      if (burstPoints) {
+        burstPoints.userData.age += dt;
+        const attr = burstPoints.geometry.attributes.position;
+        const drag = Math.pow(.965, dt*60);
+        burstPoints.userData.velocities.forEach((v,i) => {
+          v.multiplyScalar(drag);
+          v.y -= dt*.18;
+          attr.setXYZ(i, attr.getX(i)+v.x*dt, attr.getY(i)+v.y*dt, attr.getZ(i)+v.z*dt);
+        });
+        attr.needsUpdate = true;
+        burstPoints.material.opacity = Math.max(0, 1 - burstPoints.userData.age/2.8);
+        if (burstPoints.userData.age > 2.9) { fxGroup.remove(burstPoints); disposeObject(burstPoints); burstPoints = null; }
+      }
+
+      if (started && performance.now() - lastUiClockUpdate > 240) {
+        $('#timeValue').textContent = formatTime(currentElapsed());
+        lastUiClockUpdate = performance.now();
+      }
+
+      composer.render();
+    }
+
+    function validateLevels() {
+      for (const level of LEVELS) {
+        const mirrorMap = new Map(level.mirrors.filter(m => m.solutionState !== null).map(m => [key(m.pos), m.solutionState]));
+        let p = vec(level.start), d = level.startDir.clone();
+        let hit = false;
+        const seen = new Set();
+        for (let i=0;i<300;i++) {
+          p = p.clone().add(d);
+          if (key(p) === key(level.receiver)) { hit = true; break; }
+          const s = mirrorMap.get(key(p));
+          if (s !== undefined) d = reflectedDirection(d,s);
+          const v = `${key(p)}|${directionKey(d)}`;
+          if (seen.has(v)) break;
+          seen.add(v);
+        }
+        if (!hit) console.warn('Invalid solution path:', level.name);
+      }
+    }
+
+    try {
+      validateLevels();
+      $('#soundBtn').textContent = save.sound ? '◉' : '○';
+      if (initThree()) {
+        loadLevel(0, true);
+        animate();
+        requestAnimationFrame(() => setTimeout(() => loadingScreen.classList.add('hidden'), 350));
+      }
+    } catch (error) {
+      console.error(error);
+      $('#webglError').classList.add('visible');
+      $('#webglError h2').textContent = '차원 구성 중 오류가 발생했습니다';
+      $('#webglError p').textContent = '브라우저를 새로고침하거나 최신 Chrome, Edge, Safari, Firefox에서 다시 실행해 주세요.';
+      loadingScreen.classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

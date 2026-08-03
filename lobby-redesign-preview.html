@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>공기 — 메인로비 프리뷰</title>
+<style>
+  :root{
+    --ground:#EFE7D8;        /* 한지 */
+    --ground-2:#E6DCC8;
+    --card:#F7F1E4;
+    --ink:#2A241B;           /* 먹 */
+    --ink-soft:#6B6151;
+    --line:#D8CCB4;
+    --accent:#B5443C;        /* 연지·단청 적 */
+    --accent-ink:#FFF6EC;
+    --jade:#3D6C64;          /* 옥빛 */
+    --gold:#A8802F;
+    --glow:rgba(181,68,60,.14);
+    --shadow:rgba(42,36,27,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ground:#171410;
+      --ground-2:#1F1B15;
+      --card:#221D16;
+      --ink:#EFE7D8;
+      --ink-soft:#9C917E;
+      --line:#3A3328;
+      --accent:#C95A50;
+      --accent-ink:#FFF6EC;
+      --jade:#6FA69B;
+      --gold:#C79B45;
+      --glow:rgba(201,90,80,.18);
+      --shadow:rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="light"]{
+    --ground:#EFE7D8; --ground-2:#E6DCC8; --card:#F7F1E4;
+    --ink:#2A241B; --ink-soft:#6B6151; --line:#D8CCB4;
+    --accent:#B5443C; --accent-ink:#FFF6EC; --jade:#3D6C64; --gold:#A8802F;
+    --glow:rgba(181,68,60,.14); --shadow:rgba(42,36,27,.18);
+  }
+  :root[data-theme="dark"]{
+    --ground:#171410; --ground-2:#1F1B15; --card:#221D16;
+    --ink:#EFE7D8; --ink-soft:#9C917E; --line:#3A3328;
+    --accent:#C95A50; --accent-ink:#FFF6EC; --jade:#6FA69B; --gold:#C79B45;
+    --glow:rgba(201,90,80,.18); --shadow:rgba(0,0,0,.5);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Apple SD Gothic Neo","Pretendard","Noto Sans KR",system-ui,sans-serif;
+    background:var(--ground-2);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;
+    padding:32px 16px 48px;
+    gap:20px;
+  }
+  .pitch{max-width:420px;text-align:center}
+  .pitch .eyebrow{font-size:11px;letter-spacing:.28em;color:var(--ink-soft);text-transform:uppercase}
+  .pitch h1{font-size:22px;font-weight:800;margin-top:6px;text-wrap:balance}
+  .pitch p{font-size:13px;color:var(--ink-soft);margin-top:6px;line-height:1.6}
+
+  /* ---------- phone frame ---------- */
+  .phone{
+    width:min(390px,100%);
+    aspect-ratio:390/780;
+    background:var(--ground);
+    border:1px solid var(--line);
+    border-radius:36px;
+    box-shadow:0 24px 60px -20px var(--shadow);
+    overflow:hidden;
+    position:relative;
+    display:flex;flex-direction:column;
+  }
+  .phone::before{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+    background:
+      radial-gradient(ellipse 120% 60% at 50% -10%, var(--glow), transparent 60%),
+      repeating-linear-gradient(0deg, transparent 0 3px, rgba(127,110,80,.02) 3px 4px);
+  }
+
+  .screen{flex:1;display:flex;flex-direction:column;position:relative;z-index:1;min-height:0}
+  .page{flex:1;display:none;flex-direction:column;min-height:0}
+  .page.active{display:flex}
+
+  /* ---------- home ---------- */
+  .mode-chip{
+    align-self:center;margin-top:34px;
+    display:flex;align-items:center;gap:6px;
+    font-size:11px;letter-spacing:.2em;color:var(--ink-soft);
+    border:1px solid var(--line);border-radius:999px;
+    padding:5px 14px 5px 12px;background:var(--card);
+  }
+  .mode-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--jade)}
+  .stage-chip{
+    align-self:center;margin-top:14px;
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+  }
+  .stage-chip .label{
+    font-size:11px;letter-spacing:.34em;color:var(--ink-soft);
+    padding-left:.34em;
+  }
+  .stage-chip .num{
+    font-size:44px;font-weight:900;line-height:1;
+    font-variant-numeric:tabular-nums;
+    color:var(--ink);
+  }
+  .stage-chip .num em{font-style:normal;color:var(--accent)}
+  .stage-sub{min-height:10px;display:flex;flex-direction:column;align-items:center;gap:7px}
+  .stage-dots{display:flex;gap:6px}
+  .stage-dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+  .stage-dots i.done{background:var(--gold)}
+  .stage-dots i.now{background:var(--accent);transform:scale(1.25)}
+  .record-year{
+    display:none;font-size:11px;color:var(--ink-soft);letter-spacing:.14em;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* showcase */
+  .showcase{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:18px;min-height:0;
+  }
+  .stone-wrap{position:relative;width:190px;height:190px;display:grid;place-items:center}
+  .stone-ring{position:absolute;inset:0;border-radius:50%;border:1px solid var(--line)}
+  .stone-ring::after{
+    content:"";position:absolute;inset:-14px;border-radius:50%;
+    border:1px dashed var(--line);opacity:.6;
+  }
+  .stone{
+    width:120px;height:120px;border-radius:50%;
+    background:
+      radial-gradient(circle at 34% 28%, #FBF7EE 0%, #D9CBB2 34%, #8A7A61 72%, #4E4234 100%);
+    box-shadow:
+      inset -8px -12px 24px rgba(42,36,27,.35),
+      0 18px 28px -12px var(--shadow);
+    animation:float 3.6s ease-in-out infinite;
+  }
+  .stone-shadow{
+    position:absolute;bottom:8px;width:84px;height:14px;border-radius:50%;
+    background:var(--shadow);filter:blur(6px);
+    animation:squash 3.6s ease-in-out infinite;
+  }
+  @keyframes float{0%,100%{transform:translateY(6px)}50%{transform:translateY(-8px)}}
+  @keyframes squash{0%,100%{transform:scaleX(1);opacity:.8}50%{transform:scaleX(.78);opacity:.45}}
+  @media (prefers-reduced-motion: reduce){
+    .stone,.stone-shadow{animation:none}
+  }
+  .skin-name{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .skin-name b{font-size:15px;font-weight:800;letter-spacing:.06em}
+  .skin-name span{font-size:11px;color:var(--ink-soft);letter-spacing:.18em}
+
+  /* start */
+  .start-area{display:flex;justify-content:center;padding:0 32px 18px}
+  .btn-start{
+    width:100%;max-width:230px;height:58px;
+    border:none;border-radius:16px;cursor:pointer;
+    background:var(--accent);color:var(--accent-ink);
+    font-family:inherit;font-size:19px;font-weight:900;letter-spacing:.3em;padding-left:.3em;
+    box-shadow:0 10px 22px -8px var(--glow), inset 0 -3px 0 rgba(0,0,0,.18);
+    transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .btn-start:active{transform:translateY(2px);box-shadow:0 5px 12px -6px var(--glow), inset 0 -1px 0 rgba(0,0,0,.18)}
+  .btn-start:focus-visible{outline:2px solid var(--jade);outline-offset:3px}
+
+  /* ---------- sub pages common ---------- */
+  .page-head{padding:40px 24px 10px;text-align:center}
+  .page-head b{font-size:17px;font-weight:800;letter-spacing:.1em}
+  .page-head span{display:block;font-size:11px;color:var(--ink-soft);margin-top:4px;letter-spacing:.14em}
+
+  /* segmented tabs (스킨 상단: 공기돌 | 스테이지) */
+  .seg{
+    align-self:center;
+    display:grid;grid-template-columns:1fr 1fr;
+    background:var(--ground-2);border:1px solid var(--line);border-radius:12px;
+    padding:3px;gap:3px;margin:6px 24px 10px;width:calc(100% - 48px);max-width:280px;
+  }
+  .seg button{
+    height:38px;border:none;border-radius:9px;cursor:pointer;
+    background:none;font-family:inherit;font-size:13px;font-weight:700;
+    color:var(--ink-soft);letter-spacing:.12em;
+    transition:background .15s ease,color .15s ease;
+  }
+  .seg button.active{background:var(--card);color:var(--ink);box-shadow:0 2px 6px -2px var(--shadow)}
+  .seg button:focus-visible{outline:2px solid var(--jade);outline-offset:-2px}
+
+  /* skin grids */
+  .skin-pane{display:none;flex:1;min-height:0}
+  .skin-pane.active{display:block}
+  .skin-grid{
+    height:100%;overflow-y:auto;
+    display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+    padding:6px 20px 20px;align-content:start;
+  }
+  .skin-card{
+    aspect-ratio:1;border-radius:14px;background:var(--card);
+    border:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    font-size:10px;color:var(--ink-soft);letter-spacing:.08em;
+  }
+  .skin-card.equipped{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  .skin-card .mini{width:38px;height:38px;border-radius:50%}
+  .skin-card .mini.sq{border-radius:8px;width:44px;height:32px}
+  .m1{background:radial-gradient(circle at 34% 28%,#FBF7EE,#8A7A61 75%)}
+  .m2{background:radial-gradient(circle at 34% 28%,#DFF3EE,#3D6C64 75%)}
+  .m3{background:radial-gradient(circle at 34% 28%,#FBE9E4,#B5443C 75%)}
+  .m4{background:radial-gradient(circle at 34% 28%,#FDF3DA,#A8802F 75%)}
+  .m5{background:radial-gradient(circle at 34% 28%,#E7E4F5,#4E4A78 75%)}
+  .s1{background:linear-gradient(160deg,#F3EAD5,#C9B98E)}
+  .s2{background:linear-gradient(160deg,#DCEBE6,#7FA89E)}
+  .s3{background:linear-gradient(160deg,#2E2A3E,#6B6390)}
+  .skin-card.locked{opacity:.45}
+  .skin-card.locked .mini{background:var(--line)}
+
+  /* ---------- modes page ---------- */
+  .mode-list{flex:1;display:flex;flex-direction:column;gap:12px;padding:14px 24px;overflow-y:auto;min-height:0}
+  .mode-card{
+    position:relative;overflow:hidden;
+    border-radius:16px;background:var(--card);border:1px solid var(--line);
+    padding:14px 16px 14px 22px;display:flex;align-items:center;gap:14px;text-align:left;
+    cursor:pointer;font-family:inherit;color:var(--ink);
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  /* 좌측 세로 인디케이터 — 선택 시 붓끝처럼 펼쳐짐 */
+  .mode-card::before{
+    content:"";position:absolute;left:0;top:14px;bottom:14px;width:4px;
+    border-radius:0 3px 3px 0;background:var(--accent);
+    transform:scaleY(0);transform-origin:center;
+    transition:transform .18s ease;
+  }
+  .mode-card.selected::before{transform:scaleY(1)}
+  @media (prefers-reduced-motion: reduce){
+    .mode-card::before{transition:none}
+  }
+  .mode-card:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+  .mode-card .tag{
+    width:44px;height:44px;border-radius:12px;flex:none;
+    display:grid;place-items:center;font-size:18px;font-weight:900;color:var(--accent-ink);
+  }
+  .t-stage{background:#5A6E52}
+  .t-challenge{background:var(--accent)}
+  .t-infinite{background:var(--jade)}
+  .t-color{background:var(--gold)}
+  .mode-card .txt{flex:1;min-width:0}
+  .mode-card b{font-size:14px;font-weight:800;display:block}
+  .mode-card span.rec{
+    font-size:11px;color:var(--ink-soft);display:block;margin-top:4px;line-height:1.5;
+    font-variant-numeric:tabular-nums;
+  }
+  .mode-card span.rec strong{color:var(--gold);font-weight:800}
+  .mode-card.selected{border-color:var(--accent)}
+  .mode-card.selected b{color:var(--accent)}
+
+  /* ---------- achievements page ---------- */
+  .achv-list{
+    flex:1;min-height:0;overflow-y:auto;
+    display:flex;flex-direction:column;gap:10px;
+    padding:6px 20px 20px;
+  }
+  .achv-row{
+    display:flex;align-items:center;gap:12px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:12px 14px;
+  }
+  .achv-row .medal{font-size:22px;flex:none}
+  .achv-row .txt{flex:1;min-width:0}
+  .achv-row b{font-size:13px;font-weight:800;display:block}
+  .achv-row span{font-size:11px;color:var(--ink-soft);display:block;margin-top:2px}
+  .achv-row .bar{
+    height:5px;border-radius:3px;background:var(--ground-2);margin-top:6px;overflow:hidden;
+  }
+  .achv-row .bar i{display:block;height:100%;background:var(--gold);border-radius:3px}
+  .achv-row.done{border-color:var(--gold)}
+  .achv-row.done .bar i{width:100%}
+
+  /* ---------- options page ---------- */
+  .opt-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:6px 24px 20px}
+  .opt-row{
+    display:flex;align-items:center;gap:12px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:14px 16px;
+  }
+  .opt-row .ico{font-size:18px;flex:none}
+  .opt-row b{flex:1;font-size:13px;font-weight:700}
+  .toggle{
+    width:46px;height:26px;border-radius:13px;border:1px solid var(--line);
+    background:var(--ground-2);cursor:pointer;position:relative;flex:none;
+    transition:background .15s ease;
+  }
+  .toggle::after{
+    content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;
+    background:var(--card);border:1px solid var(--line);
+    transition:transform .15s ease;
+  }
+  .toggle.on{background:var(--jade);border-color:var(--jade)}
+  .toggle.on::after{transform:translateX(20px)}
+  .toggle:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+  .opt-row .val{font-size:12px;color:var(--ink-soft)}
+
+  /* ---------- bottom nav (5 tabs) ---------- */
+  .nav{
+    display:grid;grid-template-columns:repeat(5,1fr);
+    border-top:1px solid var(--line);
+    background:var(--card);
+    position:relative;z-index:1;
+  }
+  .nav > button{
+    height:74px;border:none;background:none;cursor:pointer;
+    font-family:inherit;color:var(--ink-soft);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+    font-size:10px;letter-spacing:.08em;
+    border-top:3px solid transparent;margin-top:-1px;
+    padding:0 2px;
+    transition:color .15s ease;
+    position:relative;
+  }
+  .nav > button .ico{font-size:19px;line-height:1;filter:grayscale(1);opacity:.55;transition:.15s ease}
+  .nav > button.active{color:var(--ink);border-top-color:var(--accent);font-weight:800}
+  .nav > button.active .ico{filter:none;opacity:1}
+  .nav > button:focus-visible{outline:2px solid var(--jade);outline-offset:-4px}
+  .nav .badge{
+    position:absolute;top:12px;right:calc(50% - 20px);
+    min-width:15px;height:15px;border-radius:8px;padding:0 4px;
+    background:var(--accent);color:var(--accent-ink);
+    font-size:9px;font-weight:800;display:grid;place-items:center;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .footnote{font-size:11px;color:var(--ink-soft);text-align:center;max-width:390px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="pitch">
+  <div class="eyebrow">Gonggi · Lobby Redesign</div>
+  <h1>메인로비 리디자인 프리뷰 v5</h1>
+  <p>하단 5탭: 스킨 · 모드 · 홈 · 업적 · 옵션. 스킨은 안에서 공기돌/스테이지 분리. 모드별 최고 기록 표기.</p>
+</div>
+
+<div class="phone">
+  <div class="screen">
+
+    <!-- HOME -->
+    <section class="page active" id="page-home">
+      <div class="mode-chip"><span class="dot"></span><span id="home-mode-name">스테이지 모드</span></div>
+      <div class="stage-chip">
+        <div class="label" id="home-label">스테이지</div>
+        <div class="num"><em id="home-num">12</em></div>
+        <div class="stage-sub">
+          <div class="stage-dots" id="home-dots">
+            <i class="done"></i><i class="done"></i><i class="now"></i><i></i><i></i>
+          </div>
+          <div class="record-year" id="home-year" style="display:block">목표 15년 달성하기</div>
+        </div>
+      </div>
+      <div class="showcase">
+        <div class="stone-wrap">
+          <div class="stone-ring"></div>
+          <div class="stone-shadow"></div>
+          <div class="stone"></div>
+        </div>
+        <div class="skin-name">
+          <b>강돌</b>
+          <span>기본 스킨</span>
+        </div>
+      </div>
+      <div class="start-area">
+        <button class="btn-start">시작</button>
+      </div>
+    </section>
+
+    <!-- SKINS (내부 분리: 공기돌 | 스테이지) -->
+    <section class="page" id="page-skins">
+      <div class="page-head"><b>스킨</b><span id="skin-count">공기돌 5 / 12</span></div>
+
+      <div class="seg" id="skin-seg">
+        <button data-pane="pane-stones" class="active">공기돌</button>
+        <button data-pane="pane-stages">스테이지</button>
+      </div>
+
+      <div class="skin-pane active" id="pane-stones">
+        <div class="skin-grid">
+          <div class="skin-card equipped"><div class="mini m1"></div>강돌 · 장착</div>
+          <div class="skin-card"><div class="mini m2"></div>옥돌</div>
+          <div class="skin-card"><div class="mini m3"></div>연지돌</div>
+          <div class="skin-card"><div class="mini m4"></div>금줄돌</div>
+          <div class="skin-card"><div class="mini m5"></div>밤돌</div>
+          <div class="skin-card locked"><div class="mini"></div>잠김</div>
+          <div class="skin-card locked"><div class="mini"></div>잠김</div>
+          <div class="skin-card locked"><div class="mini"></div>잠김</div>
+          <div class="skin-card locked"><div class="mini"></div>잠김</div>
+        </div>
+      </div>
+
+      <div class="skin-pane" id="pane-stages">
+        <div class="skin-grid">
+          <div class="skin-card equipped"><div class="mini sq s1"></div>마루 · 장착</div>
+          <div class="skin-card"><div class="mini sq s2"></div>대숲</div>
+          <div class="skin-card"><div class="mini sq s3"></div>밤하늘</div>
+          <div class="skin-card locked"><div class="mini sq"></div>잠김</div>
+          <div class="skin-card locked"><div class="mini sq"></div>잠김</div>
+          <div class="skin-card locked"><div class="mini sq"></div>잠김</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODES -->
+    <section class="page" id="page-modes">
+      <div class="page-head"><b>모드</b></div>
+      <div class="mode-list" id="mode-list">
+        <button class="mode-card selected" data-mode="stage">
+          <span class="tag t-stage">正</span>
+          <span class="txt"><b>스테이지</b><span class="rec">진행 <strong>스테이지 12</strong> · 목표 <strong>15년</strong> 달성하기</span></span>
+        </button>
+        <button class="mode-card" data-mode="challenge">
+          <span class="tag t-challenge">挑</span>
+          <span class="txt"><b>도전 모드</b><span class="rec">최고 기록 <strong>1,240점</strong> · <strong>37년</strong></span></span>
+        </button>
+        <button class="mode-card" data-mode="infinite">
+          <span class="tag t-infinite">無</span>
+          <span class="txt"><b>무한 모드</b><span class="rec">최고 기록 <strong>12분 47초</strong> · <strong>52년</strong></span></span>
+        </button>
+        <button class="mode-card" data-mode="color">
+          <span class="tag t-color">彩</span>
+          <span class="txt"><b>색퍼즐 모드</b><span class="rec">최고 기록 <strong>3,150점</strong> · <strong>21년</strong></span></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ACHIEVEMENTS -->
+    <section class="page" id="page-achv">
+      <div class="page-head"><b>업적</b><span>달성 6 / 20</span></div>
+      <div class="achv-list" id="achv-list"></div>
+    </section>
+
+    <!-- OPTIONS -->
+    <section class="page" id="page-options">
+      <div class="page-head"><b>옵션</b><span>설정</span></div>
+      <div class="opt-list">
+        <div class="opt-row"><span class="ico">🔊</span><b>사운드</b><button class="toggle on" aria-label="사운드"></button></div>
+        <div class="opt-row"><span class="ico">🎵</span><b>배경 음악</b><button class="toggle on" aria-label="배경 음악"></button></div>
+        <div class="opt-row"><span class="ico">📳</span><b>진동</b><button class="toggle" aria-label="진동"></button></div>
+        <div class="opt-row"><span class="ico">🌐</span><b>언어</b><span class="val">한국어</span></div>
+        <div class="opt-row"><span class="ico">ℹ️</span><b>버전</b><span class="val">0.9.0</span></div>
+      </div>
+    </section>
+
+    <!-- NAV -->
+    <nav class="nav" id="nav">
+      <button data-page="page-skins"><span class="ico">🪨</span>스킨</button>
+      <button data-page="page-modes"><span class="ico">🎯</span>모드</button>
+      <button data-page="page-home" class="active"><span class="ico">🏠</span>홈</button>
+      <button data-page="page-achv"><span class="ico">🏅</span>업적<span class="badge">2</span></button>
+      <button data-page="page-options"><span class="ico">⚙️</span>옵션</button>
+    </nav>
+
+  </div>
+</div>
+
+<p class="footnote">년 = 5라운드(꺾기)에서 획득한 스코어 단위(달력 연도 아님). 최고 기록 — 도전·색퍼즐: 점수+년 · 무한: 분·초+년. 업적 20개, 미완료 위 / 완료 아래. 수치 전부 자리표시.</p>
+
+<script>
+  // ----- page switching (bottom nav) -----
+  function showPage(id){
+    document.querySelectorAll('#nav > button').forEach(b=>
+      b.classList.toggle('active', b.dataset.page === id));
+    document.querySelectorAll('.page').forEach(p=>
+      p.classList.toggle('active', p.id === id));
+  }
+  document.querySelectorAll('#nav > button').forEach(btn=>{
+    btn.addEventListener('click',()=>showPage(btn.dataset.page));
+  });
+
+  // ----- skin sub-tabs: 공기돌 | 스테이지 -----
+  const skinCount = document.getElementById('skin-count');
+  const skinCountText = { 'pane-stones':'공기돌 5 / 12', 'pane-stages':'스테이지 3 / 8' };
+  document.querySelectorAll('#skin-seg button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('#skin-seg button').forEach(b=>
+        b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.skin-pane').forEach(p=>
+        p.classList.toggle('active', p.id === btn.dataset.pane));
+      skinCount.textContent = skinCountText[btn.dataset.pane];
+    });
+  });
+
+  // ----- achievements: 미완료 위 / 완료 아래 정렬 렌더 -----
+  const ACHIEVEMENTS = [
+    { name:'콤보 사냥꾼',    desc:'콤보 10 달성',            cur:7,  max:10,  medal:'🥈' },
+    { name:'스테이지 정복자', desc:'스테이지 20 클리어',       cur:12, max:20,  medal:'🥉' },
+    { name:'백년해로',       desc:'한 판에 100년 획득',       cur:52, max:100, medal:'🥇' },
+    { name:'꺾기 백단',      desc:'꺾기 누적 100회',          cur:64, max:100, medal:'🥈' },
+    { name:'무결점 행마',    desc:'노미스 클리어 10회',        cur:4,  max:10,  medal:'🥇' },
+    { name:'버티기 달인',    desc:'무한 모드 15분 생존',       cur:12, max:15,  medal:'🥇' },
+    { name:'색 감별사',      desc:'색퍼즐 20판 클리어',        cur:9,  max:20,  medal:'🥈' },
+    { name:'도전자의 길',    desc:'도전 모드 10판 클리어',     cur:3,  max:10,  medal:'🥈' },
+    { name:'돌 수집가',      desc:'공기돌 스킨 8종 획득',      cur:5,  max:8,   medal:'🥉' },
+    { name:'마당 넓히기',    desc:'스테이지 스킨 5종 획득',    cur:3,  max:5,   medal:'🥉' },
+    { name:'연승 가도',      desc:'연속 클리어 15회',          cur:6,  max:15,  medal:'🥇' },
+    { name:'천년의 손',      desc:'누적 1,000년 획득',        cur:412,max:1000,medal:'🥇' },
+    { name:'개근 놀이꾼',    desc:'7일 연속 접속',            cur:5,  max:7,   medal:'🥉' },
+    { name:'한 손의 품격',   desc:'한 판 5,000점 달성',       cur:3150,max:5000,medal:'🥈' },
+    { name:'첫 꺾기',        desc:'꺾기 1회 성공',            cur:1,  max:1,   medal:'🥇' },
+    { name:'다섯 알 장인',   desc:'5알 받기 성공',            cur:1,  max:1,   medal:'🥇' },
+    { name:'첫 걸음',        desc:'스테이지 1 클리어',        cur:1,  max:1,   medal:'🥉' },
+    { name:'옷장 열기',      desc:'스킨 첫 장착',             cur:1,  max:1,   medal:'🥉' },
+    { name:'십년감수',       desc:'한 판에 10년 획득',        cur:10, max:10,  medal:'🥈' },
+    { name:'놀이 입문',      desc:'아무 모드 10판 플레이',     cur:10, max:10,  medal:'🥉' },
+  ];
+  const achvList = document.getElementById('achv-list');
+  const sorted = [...ACHIEVEMENTS].sort((a,b)=>(a.cur>=a.max)-(b.cur>=b.max));
+  achvList.innerHTML = sorted.map(a=>{
+    const done = a.cur >= a.max;
+    const pct = Math.min(100, Math.round(a.cur/a.max*100));
+    const fmt = n => n.toLocaleString('ko-KR');
+    return `<div class="achv-row${done?' done':''}">
+      <span class="medal">${a.medal}</span>
+      <span class="txt"><b>${a.name}</b><span>${a.desc} · ${done?'달성':fmt(a.cur)+' / '+fmt(a.max)}</span><span class="bar"><i style="width:${pct}%"></i></span></span>
+    </div>`;
+  }).join('');
+
+  // ----- options toggles -----
+  document.querySelectorAll('.toggle').forEach(t=>{
+    t.addEventListener('click',()=>t.classList.toggle('on'));
+  });
+
+  // ----- mode select: apply → go home -----
+  // 년 = 5라운드(꺾기)에서 획득한 스코어 단위. 달력 연도 아님.
+  // 도전·색퍼즐 = 점수+년, 무한 = 분·초+년
+  const MODES = {
+    stage:     { name:'스테이지 모드', label:'스테이지',  num:'12',     year:'목표 15년 달성하기', dots:true  },
+    challenge: { name:'도전 모드',    label:'최고 기록',  num:'1,240',  year:'37년',  dots:false },
+    infinite:  { name:'무한 모드',    label:'최고 기록',  num:'12:47',  year:'52년',  dots:false },
+    color:     { name:'색퍼즐 모드',  label:'최고 기록',  num:'3,150',  year:'21년',  dots:false },
+  };
+  const homeName = document.getElementById('home-mode-name');
+  const homeLabel = document.getElementById('home-label');
+  const homeNum = document.getElementById('home-num');
+  const homeDots = document.getElementById('home-dots');
+  const homeYear = document.getElementById('home-year');
+
+  document.querySelectorAll('#mode-list .mode-card').forEach(card=>{
+    card.addEventListener('click',()=>{
+      document.querySelectorAll('#mode-list .mode-card').forEach(c=>
+        c.classList.toggle('selected', c === card));
+      const m = MODES[card.dataset.mode];
+      homeName.textContent = m.name;
+      homeLabel.textContent = m.label;
+      homeNum.textContent = m.num;
+      homeDots.style.display = m.dots ? 'flex' : 'none';
+      homeYear.style.display = m.year ? 'block' : 'none';
+      homeYear.textContent = m.year || '';
+      // 즉시 적용 후 홈 복귀 — 체크 보이게 잠깐 딜레이
+      setTimeout(()=>showPage('page-home'), 220);
+    });
+  });
+</script>
+</body>
+</html>

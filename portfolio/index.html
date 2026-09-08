@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>한선구 포트폴리오 · 인게임 영상</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#121413;color:#fff;font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;-webkit-font-smoothing:antialiased}
+body{display:flex;flex-direction:column}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.12);flex:none}
+header .t{font-size:14px;letter-spacing:.06em;color:rgba(255,255,255,.6)}
+header .t b{color:#fff;font-weight:600;margin-left:8px;letter-spacing:0;font-size:15px}
+header .rail{display:inline-block;width:3px;height:16px;background:#0F5C4E;vertical-align:-3px;margin-right:10px}
+main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:14px;min-height:0}
+.stage{position:relative;width:min(100%,960px);aspect-ratio:16/9;background:#000;border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center}
+.stage.tall{aspect-ratio:4/5;width:min(100%,480px)}
+video{width:100%;height:100%;object-fit:contain;background:#000;display:block}
+.bar{width:min(100%,960px);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{appearance:none;border:1px solid #0F5C4E;background:#0F5C4E;color:#fff;font:600 13px/1 inherit;padding:11px 16px;cursor:pointer;letter-spacing:.04em}
+.btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.3)}
+.btn:disabled{opacity:.4;cursor:default}
+.hint{font-size:12px;color:rgba(255,255,255,.5);margin-left:auto}
+.desc{width:min(100%,960px);font-size:13px;line-height:1.7;color:rgba(255,255,255,.75)}
+.desc b{color:#fff;font-weight:600}
+nav{width:min(100%,960px);display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;flex:none}
+nav a{display:block;border:1px solid rgba(255,255,255,.12);text-decoration:none;color:rgba(255,255,255,.8);font-size:12px;overflow:hidden;background:#1a1c1b}
+nav a img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;opacity:.85}
+nav a span{display:block;padding:7px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav a.on{border-color:#0F5C4E;color:#fff}
+nav a.on img{opacity:1}
+footer{flex:none;padding:10px 20px;font-size:11px;color:rgba(255,255,255,.35);letter-spacing:.06em;border-top:1px solid rgba(255,255,255,.08)}
+@media (max-width:600px){.hint{display:none}}
+</style>
+</head>
+<body>
+<header>
+ <div class="t"><span class="rail"></span>GAME DESIGN PORTFOLIO · 인게임 영상<b id="title"></b></div>
+ <a href="https://peaceful-guavaberry-62a.notion.site/Game-Designer-c5567e5e51304de2b25fab95155f672b" class="btn ghost" style="font-size:12px;padding:8px 12px" target="_blank" rel="noopener">Notion 포트폴리오</a>
+</header>
+<main>
+ <div class="stage" id="stage">
+  <video id="v" playsinline autoplay muted loop controls preload="metadata"></video>
+ </div>
+ <div class="bar">
+  <button class="btn" id="pip">PiP로 띄우기</button>
+  <button class="btn ghost" id="loop">반복 끄기</button>
+  <button class="btn ghost" id="speed">0.5배속</button>
+  <span class="hint" id="hint">PiP 버튼을 누르면 작은 창으로 분리되어 PDF 위에서 재생됩니다.</span>
+ </div>
+ <div class="desc" id="desc"></div>
+ <nav id="nav"></nav>
+</main>
+<footer>한선구 · 40mate@gmail.com · 영상은 포트폴리오 설명 목적으로만 사용합니다.</footer>
+<script>
+const LIST = {
+  mutant:     {t:'변이체 시연',        d:'<b>프로젝트C · 7단계 결과.</b> 컨셉–프레임–발주–엔진 구현을 거친 변이체가 인게임에서 준비·공격·복귀 프레임대로 동작하는 장면입니다.'},
+  telegraph:  {t:'공격 예고 연출',      d:'<b>프로젝트C · 제작 기조.</b> 준비 동작을 크게 잡고 무기와 이펙트로 방향을 표시하여 화면만 보고 회피할 수 있게 한 연출입니다.'},
+  skilltrack: {t:'스킬 트랙 편집',      d:'<b>프로젝트C · 6단계 엔진 구현.</b> 자체 제작 액션툴에서 이동·슈퍼아머·판정 이벤트를 프레임 단위로 배치하고 재생하며 조정하는 화면입니다.', tall:true},
+  loiter:     {t:'로이터 AI',           d:'<b>프로젝트C · 전투 시스템 R&D.</b> 거리를 두고 배회하다 접근하는 AI. 회피 판정이 끝난 뒤 공격이 들어오지 않도록 접근 구간을 분리했습니다.'},
+  aerial:     {t:'빙결 에어리얼',        d:'<b>프로젝트C · 전투 시스템 R&D.</b> 빙결 상태이상에서 이어지는 공중 콤보와 낙하 후 추가 타격입니다.'},
+  himdungeon: {t:'힘의 시련장 · 다나',   d:'<b>프로젝트C · 전투 콘텐츠.</b> 힘 속성 보스 다나. 바위 생성 직후 엄폐물을 이용해 돌진을 회피하는 구간입니다.'},
+  shinpei:    {t:'민첩 시련 · 신페이',   d:'<b>프로젝트C · 전투 콘텐츠.</b> 민첩 속성 보스 신페이. 시야에서 사라진 뒤 1.5초 후 돌진하여 방향 회피를 학습시킵니다.'},
+  maya01:     {t:'마야 시그니처 01',     d:'<b>프로젝트C · 플레이어블 보스.</b> 준비 모션 Ready01 70프레임과 Ready02 60프레임을 거쳐 발동하는 2차지 강화 스킬입니다.'},
+  maya02:     {t:'마야 시그니처 02',     d:'<b>프로젝트C · 플레이어블 보스.</b> 시그니처 스킬의 후속 연계 구간입니다.'},
+};
+const q = new URLSearchParams(location.search);
+let key = q.get('v'); if(!LIST[key]) key = 'mutant';
+const v = document.getElementById('v'), stage=document.getElementById('stage');
+const nav = document.getElementById('nav');
+for (const k in LIST){
+  const a=document.createElement('a'); a.href='?v='+k; a.dataset.k=k;
+  a.innerHTML='<img src="media/'+k+'.jpg" alt=""><span>'+LIST[k].t+'</span>';
+  a.addEventListener('click',e=>{e.preventDefault();load(k);history.replaceState(null,'','?v='+k);});
+  nav.appendChild(a);
+}
+function load(k){
+  key=k; const it=LIST[k];
+  document.title=it.t+' · 한선구 포트폴리오';
+  document.getElementById('title').textContent=it.t;
+  document.getElementById('desc').innerHTML=it.d;
+  stage.classList.toggle('tall',!!it.tall);
+  v.poster='media/'+k+'.jpg'; v.src='media/'+k+'.mp4'; v.load(); v.play().catch(()=>{});
+  document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.k===k));
+}
+load(key);
+// PiP
+const pipBtn=document.getElementById('pip'), hint=document.getElementById('hint');
+if(!('pictureInPictureEnabled' in document) && !v.webkitSupportsPresentationMode){
+  pipBtn.disabled=true; hint.textContent='이 브라우저는 PiP를 지원하지 않습니다. Chrome, Edge, Safari에서 열어 주세요.';
+}
+pipBtn.addEventListener('click',async()=>{
+  try{
+    if(document.pictureInPictureElement){ await document.exitPictureInPicture(); return; }
+    if(v.requestPictureInPicture){ await v.requestPictureInPicture(); }
+    else if(v.webkitSetPresentationMode){ v.webkitSetPresentationMode('picture-in-picture'); }
+    v.play().catch(()=>{});
+  }catch(e){ hint.textContent='PiP 진입 실패: '+e.message; }
+});
+v.addEventListener('enterpictureinpicture',()=>{pipBtn.textContent='PiP 닫기';hint.textContent='PDF로 돌아가도 영상이 화면 위에 계속 재생됩니다. 다른 영상은 아래 목록에서 선택하세요.';});
+v.addEventListener('leavepictureinpicture',()=>{pipBtn.textContent='PiP로 띄우기';});
+// loop / speed
+document.getElementById('loop').addEventListener('click',e=>{v.loop=!v.loop;e.target.textContent=v.loop?'반복 끄기':'반복 켜기';});
+document.getElementById('speed').addEventListener('click',e=>{v.playbackRate=v.playbackRate===1?0.5:1;e.target.textContent=v.playbackRate===1?'0.5배속':'1배속';});
+</script>
+</body>
+</html>

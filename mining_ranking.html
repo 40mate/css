@@ -1,0 +1,250 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>광산 채굴 랭킹 | 포지앤포춘 재구성 문서</title><meta name="robots" content="noindex"><style>
+:root{--txt:#37352f;--sub:#787774;--line:#e9e9e7;--bg:#fff;--soft:#f7f7f5;--callout:#f1f1ef;--blue:#e7f3f8;--blue-t:#183347;--yellow:#fbf3db;--yellow-t:#402c1b;--red:#fdebec;--red-t:#5d1715;--green:#edf3ec;--green-t:#1c3829;--purple:#f6f3f9;--purple-t:#412454;--orange:#faebdd;--orange-t:#49290e}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans KR",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.6;word-break:keep-all;overflow-wrap:anywhere}
+a{color:inherit}
+.top{position:sticky;top:0;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid transparent;z-index:5;font-size:14px;color:var(--sub);padding:10px 24px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.top a{text-decoration:none;color:var(--txt);padding:2px 6px;border-radius:4px}
+.top a:hover{background:var(--soft)}
+.top .sep{opacity:.5}
+.cover{height:30vh;min-height:180px;max-height:300px;overflow:hidden;background:#1d1c1a}
+.cover img{width:100%;height:100%;object-fit:cover;object-position:center 35%;display:block}
+.page{max-width:708px;margin:0 auto;padding:0 24px 120px}
+.icon{font-size:66px;line-height:1;margin-top:-38px;position:relative;width:78px;height:78px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:8px;box-shadow:0 0 0 1px var(--line)}
+h1{font-size:40px;line-height:1.2;font-weight:700;margin:14px 0 12px;letter-spacing:-.01em}
+.props{display:grid;grid-template-columns:150px 1fr;row-gap:4px;column-gap:8px;font-size:14px;margin:0 0 8px}
+.props .k{color:var(--sub);display:flex;align-items:center;gap:6px;padding:4px 0}
+.props .v{padding:4px 6px;border-radius:4px}
+.tag{display:inline-block;font-size:13px;padding:0 7px;border-radius:3px;background:var(--soft);margin-right:4px;line-height:1.5}
+.tag.b{background:#d3e5ef;color:#183347}.tag.g{background:#dbeddb;color:#1c3829}.tag.o{background:#fadec9;color:#49290e}.tag.y{background:#fdecc8;color:#402c1b}.tag.p{background:#e8deee;color:#412454}.tag.r{background:#ffe2dd;color:#5d1715}
+hr{border:0;border-top:1px solid var(--line);margin:10px 0}
+h2{font-size:1.5em;font-weight:600;margin:1.6em 0 .3em;line-height:1.3}
+h3{font-size:1.2em;font-weight:600;margin:1.2em 0 .2em}
+p{margin:.35em 0}
+ul,ol{margin:.3em 0;padding-left:1.6em}
+li{margin:.2em 0}
+li::marker{color:var(--txt)}
+.callout{display:flex;gap:10px;background:var(--callout);border-radius:4px;padding:14px 16px;margin:8px 0;font-size:15px}
+.callout.blue{background:var(--blue)}.callout.yellow{background:var(--yellow)}.callout.red{background:var(--red)}.callout.green{background:var(--green)}.callout.purple{background:var(--purple)}.callout.orange{background:var(--orange)}
+.callout .e{font-size:20px;line-height:1.3;flex:none}
+.callout p{margin:0}
+blockquote{margin:8px 0;padding:2px 0 2px 14px;border-left:3px solid var(--txt);font-size:1.05em}
+.fig{margin:10px 0}
+.fig img{width:100%;display:block;border-radius:3px}
+.fig .cap{font-size:14px;color:var(--sub);margin-top:6px}
+.cols{display:flex;gap:24px;margin:10px 0}
+.cols>div{flex:1;min-width:0}
+.cols img{width:100%;display:block;border-radius:3px;background:#111}
+.cols .cap{font-size:14px;color:var(--sub);margin-top:6px}
+.shots{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:10px 0}
+.shots.two{grid-template-columns:repeat(2,1fr)}
+.shots img{width:100%;display:block;border-radius:6px;background:#111}
+.shots .cap{font-size:13px;color:var(--sub);margin-top:5px}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:500;color:var(--sub)}
+td.k{font-weight:500;white-space:nowrap}
+.tw{overflow-x:auto}
+details{margin:6px 0;padding:2px 0}
+summary{cursor:pointer;font-weight:500;list-style:none;display:flex;gap:6px;align-items:center}
+summary::before{content:"▶";font-size:10px;color:var(--sub);transition:transform .15s}
+details[open]>summary::before{transform:rotate(90deg)}
+details>div{padding:4px 0 4px 18px}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em;background:var(--soft);padding:1px 5px;border-radius:3px;color:#eb5757}
+.todo{list-style:none;padding-left:0}
+.todo li{display:flex;gap:8px;align-items:flex-start}
+.todo li::before{content:"";width:16px;height:16px;border:1px solid #9b9a97;border-radius:3px;flex:none;margin-top:5px}
+.todo li.done::before{background:#2383e2;border-color:#2383e2;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M5.5 11.3 1.8 7.6l1.2-1.2 2.5 2.5 5.5-5.5 1.2 1.2z' fill='%23fff'/%3E%3C/svg%3E");background-size:12px;background-repeat:no-repeat;background-position:center}
+.todo li.done{color:var(--sub);text-decoration:line-through}
+.nav{display:flex;justify-content:space-between;gap:12px;margin-top:40px;padding-top:14px;border-top:1px solid var(--line);font-size:14px}
+.nav a{text-decoration:none;color:var(--sub);padding:8px 10px;border-radius:4px;border:1px solid var(--line);flex:1}
+.nav a:hover{background:var(--soft)}
+.nav a b{display:block;color:var(--txt);font-weight:500;margin-top:2px}
+.nav a.next{text-align:right}
+.linkcard{display:flex;gap:12px;border:1px solid var(--line);border-radius:4px;padding:10px 12px;text-decoration:none;margin:6px 0;align-items:center}
+.linkcard:hover{background:var(--soft)}
+.linkcard .ic{font-size:22px;flex:none}
+.linkcard b{font-weight:500;display:block}
+.linkcard span{font-size:13px;color:var(--sub)}
+.flow{display:flex;gap:0;align-items:stretch;margin:10px 0;overflow-x:auto}
+.flow>div{flex:1;min-width:120px;background:var(--soft);border-radius:4px;padding:10px 12px;font-size:14px;position:relative;margin-right:22px}
+.flow>div:last-child{margin-right:0}
+.flow>div:not(:last-child)::after{content:"→";position:absolute;right:-18px;top:50%;transform:translateY(-50%);color:var(--sub)}
+.flow b{display:block;font-weight:600;margin-bottom:2px}
+.flow small{color:var(--sub);display:block;font-size:12px}
+.foot{margin-top:60px;font-size:13px;color:var(--sub);border-top:1px solid var(--line);padding-top:12px}
+@media(max-width:600px){h1{font-size:30px}.props{grid-template-columns:120px 1fr}.cols{flex-direction:column;gap:12px}.shots{grid-template-columns:repeat(2,1fr)}.shots.two{grid-template-columns:1fr 1fr}}
+/* spec-doc additions */
+.hist{font-size:13.5px}
+.hist td:nth-child(1){white-space:nowrap;width:110px}
+.hist td:nth-child(2){white-space:nowrap;width:90px}
+.ov{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:8px 0}
+.ov>div{background:var(--soft);border-radius:4px;padding:12px 14px;font-size:14.5px}
+.ov h4{margin:0 0 6px;font-size:14px;color:var(--sub);font-weight:500}
+.ov ul{margin:0;padding-left:1.2em}
+h2 .n{color:var(--sub);font-weight:500;margin-right:8px}
+h3 .n{color:var(--sub);font-weight:500;margin-right:6px}
+.ex{margin:4px 0 4px 0;padding-left:14px;border-left:2px solid var(--line);color:#4b4a46;font-size:14.5px}
+.ex b{font-weight:600;color:var(--txt)}
+.rv{display:flex;gap:10px;align-items:flex-start;margin:6px 0;font-size:14.5px}
+.rv .m{flex:none;font-size:13px;color:var(--sub);background:var(--soft);padding:1px 6px;border-radius:3px;margin-top:3px}
+table.c td{text-align:center}
+table td.l{text-align:left}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:4px 10px;font-size:14.5px;margin:6px 0}
+.kv .k{color:var(--sub)}
+.pend{list-style:none;padding:0}
+.pend li{display:flex;gap:8px;align-items:flex-start;margin:4px 0}
+.pend li::before{content:"▸";color:var(--sub);flex:none}
+@media(max-width:600px){.ov{grid-template-columns:1fr}}
+
+.page{padding-top:56px}
+.icon{margin-top:0}
+.ov{display:flex;gap:24px;margin:8px 0}
+.ov>div{flex:1;min-width:0;background:var(--soft);border-radius:4px;padding:12px 14px}
+.ov h4{margin:0 0 6px;font-size:14px;color:var(--sub);font-weight:600}
+.ov ul{margin:0;padding-left:1.2em;font-size:14.5px}
+h2 .n,h3 .n{color:var(--sub);font-weight:400;margin-right:.45em}
+.nvideo video{width:100%;display:block;border-radius:4px;background:#000}
+.nvideo .cap{font-size:13px;color:var(--sub);margin-top:5px}
+@media(max-width:600px){.ov{flex-direction:column;gap:12px}}
+</style></head><body><div class="page"><div class="icon">🏆</div>
+<h1>광산 채굴 랭킹</h1>
+<div class="props">
+ <div class="k">📁 분류</div><div class="v">라이브 이벤트 기획, 리텐션 설계</div>
+ <div class="k">👤 작성</div><div class="v">잉크(한선구), 단독 기획</div>
+ <div class="k">🏷️ 상태</div><div class="v"><span class="tag y">기획 제안</span><span class="tag b">스프린트 4</span></div>
+ <div class="k">📎 관련 문서</div><div class="v">광산 내부 구조 리뉴얼, 온보딩 흐름 개편</div>
+</div>
+<hr>
+<div class="callout yellow"><div class="e">💡</div><p>회사 내부 문서를 포트폴리오 목적으로 재구성한 문서다. 구조와 규칙은 원문 기준이며, 내부 지표와 재화 가격, 보상 수치, 팀 정보는 제외했다. 레퍼런스로 검토한 타 게임의 화면 캡처는 저작권 문제로 싣지 않고, 무엇을 참고했는지만 기록했다.</p></div>
+
+<h2>History</h2>
+<div class="tw"><table class="hist">
+ <tr><th>작성일</th><th>작업자</th><th>작업 내역</th></tr>
+ <tr><td>2026-09-11</td><td>잉크</td><td>기획 초안 작성. 진입 구조, 3일 회차 구조, AI 경쟁자 구성, 계정 없는 참가 구조, 보상 방향, 레퍼런스 3종 비교</td></tr>
+</table></div>
+
+<h2>개요</h2>
+<div class="ov">
+ <div><h4>목적</h4><ul>
+  <li>지금 당장 접속할 이유를 만든다. 성장만으로는 세션을 끊어 만들지 못한다.</li>
+  <li>새 콘텐츠를 만들지 않고, 이미 하고 있는 채굴의 가치를 높인다.</li>
+  <li>계정 시스템과 서버 매칭 없이 경쟁 경험을 구성한다.</li>
+  <li>이벤트 보상이 본편 성장 곡선을 넘어서지 않게 관리한다.</li>
+ </ul></div>
+ <div><h4>다루지 않는 내용</h4><ul>
+  <li>보상 품목과 수량 — 밸런스 시트에서 다룬다.</li>
+  <li>랭킹 화면 레이아웃과 아트.</li>
+  <li>계정 연동과 기기 간 데이터 복구 — 계정 시스템 도입 시 별도 대응.</li>
+ </ul></div>
+</div>
+
+<h2><span class="n">1.</span>한 줄 정의</h2>
+<blockquote>기존 광산에서 평소대로 채굴하면 점수가 쌓이는 3일짜리 랭킹 이벤트. 채굴량 → 순위 → 보상으로 하루 여러 번 접속할 이유를 만든다.</blockquote>
+
+<h2><span class="n">2.</span>도입 의도</h2>
+<p>현재 게임은 골드와 레벨이 쌓이면 성장이 진행되는 구조라, 지금 이 순간 접속해야 할 이유가 약하다. 성장은 언제 해도 되기 때문이다. 기존 채굴에 <b>경쟁</b>과 <b>마감</b>을 붙여 플레이 목표를 추가한다.</p>
+<div class="tw"><table>
+ <tr><th>장치</th><th>만드는 동기</th></tr>
+ <tr><td class="k">상대 비교</td><td>내 성장뿐 아니라 다음 순위까지의 격차가 동기가 된다</td></tr>
+ <tr><td class="k">마감 시한</td><td>3일 안에 달성해야 하는 목표가 생긴다</td></tr>
+ <tr><td class="k">일간 보상</td><td>매일 성과를 확인하고 다음 날 다시 도전할 수 있다</td></tr>
+</table></div>
+<div class="callout green"><div class="e">✅</div><p>핵심은 별도 콘텐츠를 플레이하게 만드는 것이 아니라, <b>이미 하고 있는 채굴의 가치를 높이는 것</b>이다. 새 루프를 만들면 학습 비용과 제작 비용이 함께 들고, 기존 루프와 플레이 시간을 나눠 갖게 된다.</p></div>
+
+<h2><span class="n">3.</span>진입 구조</h2>
+<div class="tw"><table>
+ <tr><th>항목</th><th>제안</th></tr>
+ <tr><td class="k">해금 시점</td><td>온보딩 진행 중, 특정 건설 단계 완료 이후</td></tr>
+ <tr><td class="k">기준 예시</td><td>망치 제작 기구 건설 완료 후</td></tr>
+ <tr><td class="k">진입 방식</td><td>메인 화면의 랭킹 버튼 활성화</td></tr>
+ <tr><td class="k">최초 안내</td><td>채굴 → 점수 획득 → 순위와 보상 확인</td></tr>
+ <tr><td class="k">회차 시작</td><td>첫 안내와 함께 시작</td></tr>
+</table></div>
+<p>채굴과 건설을 이미 경험한 시점에 <b>"지금 하던 채굴이 랭킹 점수로도 쌓인다"</b>고 안내한다. 짧은 안내 후 기존 온보딩을 이어가며, 이후 플레이가 자연스럽게 이벤트 참여로 연결된다. 안내가 길어져 초반 흐름을 끊지 않는 것이 제약 조건이다.</p>
+
+<h2><span class="n">4.</span>3일 회차 구조</h2>
+<p>기존 광산의 채굴량을 그대로 점수로 집계한다. 광석과 본편 보상은 기존대로 획득하며, 같은 채굴 실적이 랭킹에도 반영된다.</p>
+<div class="tw"><table>
+ <tr><th>장치</th><th>내용</th><th>목적</th></tr>
+ <tr><td class="k">진행 기간</td><td>개인별 시작 시점부터 72시간</td><td>참가 시점과 무관하게 온전한 3일 보장</td></tr>
+ <tr><td class="k">일간 순위</td><td>24시간마다 정산 후 초기화</td><td>매일 새로운 도전 기회 제공</td></tr>
+ <tr><td class="k">누적 순위</td><td>3일 동안의 점수로 최종 정산</td><td>꾸준한 참여와 완주 유도</td></tr>
+ <tr><td class="k">러시 타임</td><td>하루 3회, 랭킹 점수에만 배율 적용</td><td>반복 접속 동기 제공</td></tr>
+</table></div>
+<p>하루 성적이 낮아도 다음 날 일간 순위에 다시 도전할 수 있고, 누적 순위에서는 꾸준히 참여한 쪽이 보상받는다. 두 순위를 함께 두는 이유는, 하나만 두면 초반에 뒤처진 사람이 남은 기간을 포기하기 때문이다.</p>
+<div class="callout blue"><div class="e">⚖️</div><p><b>러시 타임은 점수에만 배율을 적용하고 실제 광석 산출량은 늘리지 않는다.</b> 산출량까지 배율을 주면 이벤트가 본편 재화 공급량을 직접 흔들어, 이벤트 기간마다 경제 곡선이 요동친다.</p></div>
+<p>접속 중 채굴이 더 유리하도록 설계하되, 오프라인 실적 반영 비율은 별도로 조정한다. 오프라인을 0으로 두면 자리를 비운 시간이 그대로 처벌이 되고, 100으로 두면 접속할 이유가 사라진다.</p>
+
+<h2><span class="n">5.</span>AI 경쟁자 구성</h2>
+<p>유저 1명과 AI 경쟁자로 개인 랭킹을 구성한다. 노력하면 순위가 오르고, 다시 접속하면 따라잡을 목표가 남아 있는 경험을 지향한다.</p>
+<p>랭킹판에는 30 ~ 50명을 표시하되, 실제 경합은 주변 5 ~ 7명에서 만든다. 전체 인원은 규모감을 위한 것이고, 체감은 바로 위아래에서 결정되기 때문이다. 인원수는 초안값이다.</p>
+<div class="tw"><table>
+ <tr><th>역할</th><th>행동</th><th>목적</th></tr>
+ <tr><td class="k">선두</td><td>잡을 수 있는 격차로 앞서간다</td><td>추격 목표 제공</td></tr>
+ <tr><td class="k">동행</td><td>가까운 점수에서 엎치락뒤치락한다</td><td>순위 상승의 성취감 제공</td></tr>
+ <tr><td class="k">추격자</td><td>뒤에서 따라오며 일부 구간에서 추월한다</td><td>재접속 동기 제공</td></tr>
+</table></div>
+<ul>
+ <li>회차 시작 시점의 유저 채굴 능력에 맞춰 난이도를 정한다.</li>
+ <li>유저가 성장할수록 AI가 무제한으로 강해지지 않게 한다. 플레이로 확보한 우위는 유지되어야 한다.</li>
+ <li>미접속 중에는 완만하게 순위가 밀린다. 급격히 밀면 복귀 의욕이 꺾인다.</li>
+ <li>AI마다 활동 구간과 휴식 구간을 둔다. 24시간 균일하게 오르면 사람이 아니라 타이머로 읽힌다.</li>
+ <li>막판에도 경합은 만들되, 갑작스러운 점수 상승으로 앞선 노력을 무효화하지 않는다.</li>
+</ul>
+
+<h2><span class="n">6.</span>계정 없는 참가 구조</h2>
+<div class="callout green"><div class="e">🔑</div><p>경쟁자가 전원 AI인 개인 랭킹이므로 <b>실제 유저 간 매칭도, 회원가입도 필요하지 않다.</b> 서버 랭킹과 계정 시스템을 갖추지 않은 시점에도 경쟁 경험을 먼저 붙일 수 있다는 것이 이 구성의 이점이다.</p></div>
+<div class="tw"><table>
+ <tr><th>항목</th><th>처리</th></tr>
+ <tr><td class="k">내부 구분</td><td>저장 데이터에 식별값을 자동 생성해 참가 기록을 유지한다</td></tr>
+ <tr><td class="k">화면 표시</td><td>기본 이름과 「나」 표시로 본인을 강조한다</td></tr>
+ <tr><td class="k">AI 구분</td><td>준비된 이름과 아이콘을 쓰고, 회차 중에는 명단을 유지한다</td></tr>
+</table></div>
+<p>앱을 재실행해도 점수와 경쟁자, 보상 수령 기록이 이어지도록 저장한다. 기기 간 연동과 데이터 복구는 추후 계정 시스템 도입 시 별도로 대응한다.</p>
+
+<h2><span class="n">7.</span>보상 설계</h2>
+<div class="tw"><table>
+ <tr><th>구분</th><th>보상 방향</th><th>기대 역할</th></tr>
+ <tr><td class="k">일간 보상</td><td>즉시 사용하는 성장 재화</td><td>다음 날 성장과 참여 지원</td></tr>
+ <tr><td class="k">종료 보상</td><td>회차 이후에도 가치가 남는 보상</td><td>3일 완주와 재참여 유도</td></tr>
+ <tr><td class="k">참가 보상</td><td>최소 참여 조건 충족 시 지급</td><td>하위권 포기 방지</td></tr>
+</table></div>
+<p>일간 보상으로 본편이 성장하면 다음 날 채굴에도 도움이 된다. 다만 순위에 따른 격차가 과도하게 벌어지지 않도록 하고, 이벤트 전체 보상량은 본편 성장 곡선 안에서 관리한다.</p>
+
+<h2><span class="n">8.</span>기대 효과와 확인 방법</h2>
+<div class="tw"><table>
+ <tr><th>기대 효과</th><th>연결 장치</th></tr>
+ <tr><td class="k">하루 접속 횟수 증가</td><td>러시 타임과 순위 재확인</td></tr>
+ <tr><td class="k">한 번의 플레이 시간 증가</td><td>다음 순위까지의 추가 채굴 목표</td></tr>
+ <tr><td class="k">첫날과 사흘째 재방문율 증가</td><td>일간 재도전과 누적 보상</td></tr>
+ <tr><td class="k">반복 참여</td><td>회차 종료 보상과 주기적 운영</td></tr>
+</table></div>
+<p>확인은 세 가지를 함께 본다. 온보딩 완료율, 순위가 밀린 뒤의 재접속률, 3일 완주율. 하나만 보면 판단이 어긋난다. 접속 횟수만 올라가고 완주율이 낮으면 경쟁 피로가 생긴 것이고, 완주율은 높은데 온보딩 완료율이 떨어졌으면 안내가 초반 흐름을 끊은 것이다.</p>
+<p>운영은 3일 진행 후 휴식하는 반복 사이클을 전제로 한다. 러시 배율과 보상량, 휴식 기간은 테스트로 확정한다.</p>
+
+<h2><span class="n">9.</span>레퍼런스</h2>
+<div class="tw"><table>
+ <tr><th>게임</th><th>참고한 지점</th></tr>
+ <tr><td class="k">Royal Match — King's Cup</td><td>내 순위 강조, 점수 격차 표시, 남은 시간 표시</td></tr>
+ <tr><td class="k">Travel Town — Tournament</td><td>순위별 보상을 순위표와 함께 보여 주는 구성</td></tr>
+ <tr><td class="k">MONOPOLY GO! — Toy Soldiers Tournament</td><td>남은 시간, 개인 보상 진행도, 순위표를 한 화면에 배치</td></tr>
+</table></div>
+<p>세 사례의 공통점은 순위표 하나만 띄우지 않는다는 것이다. 남은 시간과 다음 보상까지의 진행도를 같은 화면에 두어, 순위를 확인하러 들어온 사람이 "조금만 더 하면 된다"는 판단을 그 자리에서 하게 만든다.</p>
+
+<h2>고려사항</h2>
+<ul>
+ <li>※ 결정 — 러시 타임은 점수에만 배율. 광석 산출량은 건드리지 않는다.</li>
+ <li>※ 결정 — 경쟁자는 전원 AI. 계정과 서버 매칭 없이 시작한다.</li>
+ <li>※ 초안 — 표시 인원 30 ~ 50명, 경합 구간 5 ~ 7명. 플레이 테스트로 확정.</li>
+ <li>※ 초안 — 오프라인 실적 반영 비율. 0과 100 사이의 어느 지점인지 테스트 필요.</li>
+ <li>※ 미정 — 회차 사이 휴식 기간. 너무 짧으면 피로, 너무 길면 습관이 끊긴다.</li>
+</ul>
+
+<div class="foot">포지앤포춘 재구성 문서. 작성 잉크(한선구). 회사 내부 문서의 사본이 아니며, 포트폴리오 목적으로 구조와 규칙만 재작성한 문서다.</div>
+</div><script>
+(function(){function b2b(b,t){var s=atob(b),l=s.length,st=65536,p=[];for(var o=0;o<l;o+=st){var e=Math.min(o+st,l),a=new Uint8Array(e-o);for(var i=o;i<e;i++)a[i-o]=s.charCodeAt(i);p.push(a);}return new Blob(p,{type:t});}
+function go(){var v=document.querySelectorAll('video[data-vsrc]');for(var k=0;k<v.length;k++){(function(x){var n=document.getElementById(x.getAttribute('data-vsrc'));if(!n)return;try{x.src=URL.createObjectURL(b2b(n.textContent.trim(),'video/mp4'));n.textContent='';}catch(e){}})(v[k]);}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();})();
+</script></body></html>
